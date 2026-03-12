@@ -1,0 +1,1438 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>루체수학 학원 관리</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Noto+Serif+KR:wght@400;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #161920;
+    --surface2: #1e2230;
+    --border: #2a2f3e;
+    --accent: #4f8ef7;
+    --accent2: #7c5cfc;
+    --green: #3ecf8e;
+    --orange: #f7934f;
+    --red: #f75f5f;
+    --yellow: #f7d44f;
+    --text: #e8eaf0;
+    --muted: #8b90a8;
+    --card-shadow: 0 4px 24px rgba(0,0,0,0.4);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+
+  /* Header */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    height: 60px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    flex-wrap: wrap;
+  }
+  .logo { font-family: 'Noto Serif KR', serif; font-size: 18px; font-weight: 700; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; white-space: nowrap; }
+  .nav { display: flex; gap: 2px; flex-wrap: wrap; }
+  .nav-btn { padding: 6px 14px; border-radius: 8px; border: none; background: transparent; color: var(--muted); cursor: pointer; font-size: 13px; font-family: 'Noto Sans KR', sans-serif; font-weight: 500; transition: all 0.2s; white-space: nowrap; }
+  .nav-btn:hover { background: var(--surface2); color: var(--text); }
+  .nav-btn.active { background: var(--accent); color: #fff; }
+
+  .main { flex: 1; padding: 24px; max-width: 1100px; margin: 0 auto; width: 100%; }
+  .tab { display: none; }
+  .tab.active { display: block; }
+
+  /* Cards */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: var(--card-shadow); }
+  .card-title { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .card-title .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+
+  /* Form */
+  label { font-size: 12px; color: var(--muted); margin-bottom: 6px; display: block; font-weight: 500; }
+  input, select, textarea { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 10px 12px; font-size: 14px; font-family: 'Noto Sans KR', sans-serif; outline: none; transition: border-color 0.2s; }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 80px; line-height: 1.7; }
+  select option { background: var(--surface2); }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .field { display: flex; flex-direction: column; }
+
+  /* Buttons */
+  .btn { padding: 10px 20px; border-radius: 8px; border: none; font-family: 'Noto Sans KR', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: #3a7de8; transform: translateY(-1px); }
+  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-green { background: var(--green); color: #000; }
+  .btn-green:hover { background: #32b87a; }
+  .btn-purple { background: var(--accent2); color: #fff; }
+  .btn-purple:hover { background: #6a4de0; }
+  .btn-orange { background: var(--orange); color: #fff; }
+  .btn-orange:hover { background: #e07a35; }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+  /* Output */
+  .output-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 16px; font-size: 14px; line-height: 1.8; white-space: pre-wrap; min-height: 100px; color: var(--text); }
+
+  /* Tags */
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .tag-blue { background: rgba(79,142,247,0.15); color: var(--accent); }
+  .tag-green { background: rgba(62,207,142,0.15); color: var(--green); }
+  .tag-orange { background: rgba(247,147,79,0.15); color: var(--orange); }
+  .tag-purple { background: rgba(124,92,252,0.15); color: var(--accent2); }
+
+  /* Tables */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .data-table th { text-align: left; padding: 8px 12px; color: var(--muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid var(--border); }
+  .data-table td { padding: 10px 12px; border-bottom: 1px solid rgba(42,47,62,0.5); }
+  .data-table tr:hover td { background: rgba(79,142,247,0.04); }
+
+  /* Stats */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: center; }
+  .stat-num { font-size: 24px; font-weight: 700; line-height: 1; margin-bottom: 4px; }
+  .stat-label { font-size: 11px; color: var(--muted); font-weight: 500; }
+
+  /* Loading */
+  .loading-bar { height: 3px; background: linear-gradient(90deg, var(--accent), var(--accent2), var(--green)); border-radius: 2px; width: 0%; transition: width 0.5s; margin-bottom: 16px; }
+  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.6s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Toast */
+  .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #fff; padding: 12px 24px; border-radius: 50px; font-size: 14px; font-weight: 500; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 9999; white-space: nowrap; box-shadow: 0 4px 24px rgba(79,142,247,0.4); }
+  .toast.show { opacity: 1; }
+
+  /* Info box */
+  .info-box { background: rgba(79,142,247,0.08); border: 1px solid rgba(79,142,247,0.2); border-radius: 8px; padding: 12px 16px; font-size: 13px; color: var(--accent); margin-bottom: 16px; line-height: 1.7; }
+
+  /* Check group */
+  .check-group { display: flex; gap: 16px; flex-wrap: wrap; }
+  .check-item { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px; }
+  .check-item input[type=checkbox] { width: auto; accent-color: var(--accent); }
+
+  /* Section title */
+  .section-label { font-size: 22px; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+
+  /* Subtabs */
+  .subtab-bar { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 0; }
+  .subtab-btn { padding: 8px 16px; border: none; background: transparent; color: var(--muted); font-family: 'Noto Sans KR', sans-serif; font-size: 14px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s; }
+  .subtab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .subtab-content { display: none; }
+  .subtab-content.active { display: block; }
+
+  /* Feedback app memo style */
+  .memo-textarea { min-height: 200px !important; font-family: 'Noto Sans KR', sans-serif; }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 8px; line-height: 1.6; }
+  .hint code { background: var(--surface); padding: 1px 6px; border-radius: 4px; font-family: 'DM Mono', monospace; font-size: 11px; color: var(--orange); }
+
+  /* Result cards (feedback app style) */
+  .result-cards { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+  .result-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .result-card-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--surface2); border-bottom: 1px solid var(--border); }
+  .result-card-name { font-weight: 700; color: var(--accent); display: flex; align-items: center; gap: 8px; }
+  .result-card-body { padding: 14px 16px; font-size: 14px; line-height: 1.8; white-space: pre-wrap; }
+
+  /* History table */
+  .history-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .history-table th { background: var(--surface2); color: var(--muted); padding: 10px 12px; text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid var(--border); }
+  .history-table td { padding: 10px 12px; border-bottom: 1px solid rgba(42,47,62,0.5); color: var(--text); }
+  .history-table tr:hover td { background: rgba(79,142,247,0.04); }
+
+
+  /* Modals */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(6px); padding: 20px; }
+  .modal-overlay.hidden { display: none; }
+  .modal-box { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 28px; width: 100%; box-shadow: 0 24px 64px rgba(0,0,0,0.7); }
+  .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .modal-desc { font-size: 13px; color: var(--muted); line-height: 1.8; margin-bottom: 16px; }
+
+  /* Utils */
+  .mt8 { margin-top: 8px; } .mt12 { margin-top: 12px; } .mt16 { margin-top: 16px; } .mt20 { margin-top: 20px; }
+  .flex { display: flex; gap: 8px; align-items: center; }
+  .flex-end { justify-content: flex-end; }
+  .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+  @media (max-width: 700px) {
+    .grid2, .grid3 { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: 1fr 1fr; }
+    .nav-btn { padding: 5px 8px; font-size: 12px; }
+    .header { height: auto; padding: 10px 16px; gap: 8px; }
+  }
+
+  /* API Key Modal */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(6px); }
+  .modal-overlay.hidden { display: none; }
+  .modal-box { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 32px; width: 100%; max-width: 480px; box-shadow: 0 24px 64px rgba(0,0,0,0.7); }
+  .modal-title { font-size: 20px; font-weight: 700; margin-bottom: 10px; }
+  .modal-desc { font-size: 13px; color: var(--muted); line-height: 1.8; margin-bottom: 20px; }
+  .modal-desc a { color: var(--accent); text-decoration: none; }
+  .api-key-input { font-family: 'DM Mono', monospace; font-size: 13px; }
+  .api-status { font-size: 12px; margin-top: 8px; min-height: 18px; }
+  .api-status.ok { color: var(--green); }
+  .api-status.err { color: var(--red); }
+  .api-indicator { margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); cursor: pointer; padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border); transition: all 0.2s; white-space: nowrap; }
+  .api-indicator:hover { border-color: var(--accent); color: var(--accent); }
+  .api-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--red); flex-shrink: 0; }
+  .api-dot.on { background: var(--green); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">📐 루체수학</div>
+  <nav class="nav">
+    <button class="nav-btn active" onclick="showTab('memo', this)">✏️ 수업메모 피드백</button>
+    <button class="nav-btn" onclick="showTab('feedback', this)">📝 개별 피드백</button>
+    <button class="nav-btn" onclick="showTab('parent', this)">💬 학부모 문자</button>
+    <button class="nav-btn" onclick="showTab('blog', this)">📰 블로그</button>
+    <button class="nav-btn" onclick="showTab('wonbi', this)">💰 원비 관리</button>
+    <button class="nav-btn" onclick="showTab('students', this)">👥 학생 현황</button>
+    <button class="nav-btn" onclick="showTab('history', this)">📋 수업 기록</button>
+  </nav>
+</div>
+
+<div class="main">
+
+<!-- ============ TAB: 수업메모 피드백 (원래 피드백 앱) ============ -->
+<div id="tab-memo" class="tab active">
+  <div class="section-label">✏️ 수업메모로 피드백 문자 생성</div>
+
+  <div class="card">
+    <div class="card-title"><span class="dot"></span> 수업 날짜</div>
+    <input type="date" id="classDate" style="max-width:200px;">
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:var(--green)"></span> 수업 메모 붙여넣기</div>
+    <textarea class="memo-textarea" id="memoInput" placeholder="수업 후 메모를 여기에 붙여넣으세요.
+
+예시:
+진구/ 오늘 직사각형 개념 잡았음. 다음시간에 정사각형 공부하기로 함.
+——
+윤서/ 최상위쎈 문제 풀이 진행했음. 잘 따라오고 있음.
+——
+서현/ 주간테스트 봤고 오답 고쳤음."></textarea>
+    <div class="hint mt8">
+      학생 구분: <code>——</code> 또는 <code>---</code> 로 구분 &nbsp;·&nbsp; 학생 이름 뒤에 <code>/</code> 붙이기
+    </div>
+  </div>
+
+  <div class="flex mt8">
+    <button class="btn btn-primary" onclick="generateMessages()">✨ 학생별 문자 생성</button>
+    <button class="btn btn-secondary" onclick="clearMemo()">🗑 초기화</button>
+  </div>
+
+  <div class="loading-bar mt12" id="loadingBar"></div>
+  <div id="memoResultArea"></div>
+</div>
+
+<!-- ============ TAB: 개별 피드백 ============ -->
+<div id="tab-feedback" class="tab">
+  <div class="section-label">📝 수업 후 피드백 문자</div>
+
+  <div class="card">
+    <div class="card-title"><span class="dot"></span> 학생 정보</div>
+    <div class="grid3">
+      <div class="field">
+        <label>학생 이름</label>
+        <select id="fb-student" onchange="fillStudentInfo('fb')">
+          <option value="">-- 학생 선택 --</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>학년/반</label>
+        <input type="text" id="fb-grade" placeholder="예: 초5 / 초등 3회">
+      </div>
+      <div class="field">
+        <label>수업 날짜</label>
+        <input type="date" id="fb-date">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:var(--green)"></span> 오늘 수업 내용</div>
+    <div class="grid2">
+      <div class="field">
+        <label>수업 단원/주제</label>
+        <input type="text" id="fb-topic" placeholder="예: 방정식 활용 문제, 함수의 기초">
+      </div>
+      <div class="field">
+        <label>수업 분위기</label>
+        <select id="fb-mood">
+          <option value="집중잘함">😊 집중 잘 했어요</option>
+          <option value="보통">😐 보통이었어요</option>
+          <option value="산만">😅 조금 산만했어요</option>
+          <option value="피곤">😴 많이 피곤해 보였어요</option>
+        </select>
+      </div>
+    </div>
+    <div class="mt12 field"><label>잘한 점 / 칭찬</label><input type="text" id="fb-good" placeholder="예: 도형 문제를 빠르게 풀었어요, 질문을 적극적으로 했어요"></div>
+    <div class="mt12 field"><label>보완할 점 / 숙제</label><input type="text" id="fb-improve" placeholder="예: 분수 계산 연습 필요, 교재 p.45~48 풀어오기"></div>
+    <div class="mt12 field"><label>다음 수업 예고</label><input type="text" id="fb-next" placeholder="예: 다음 시간엔 방정식 심화 문제 풀 예정"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:var(--orange)"></span> 문자 옵션</div>
+    <div class="check-group">
+      <label class="check-item"><input type="checkbox" id="fb-opt-warm" checked> 따뜻한 마무리 인사</label>
+      <label class="check-item"><input type="checkbox" id="fb-opt-hw"> 숙제 강조</label>
+      <label class="check-item"><input type="checkbox" id="fb-opt-short"> 짧게 (3줄 이내)</label>
+    </div>
+  </div>
+
+  <div class="flex flex-end mt8">
+    <button class="btn btn-primary" onclick="generateFeedback()">✨ AI로 문자 생성</button>
+  </div>
+
+  <div class="card mt16">
+    <div class="card-title"><span class="dot" style="background:var(--accent2)"></span> 생성된 문자</div>
+    <div class="output-box" id="fb-output"><span style="color:var(--muted);font-style:italic;">위 내용을 입력하고 '문자 생성' 버튼을 눌러주세요.</span></div>
+    <div class="flex flex-end mt8">
+      <button class="btn btn-secondary btn-sm" onclick="copyText('fb-output')">📋 복사</button>
+      <button class="btn btn-secondary btn-sm" onclick="generateFeedback()">🔄 다시 생성</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ TAB: 학부모 문자 ============ -->
+<div id="tab-parent" class="tab">
+  <div class="section-label">💬 학부모 문자 대응</div>
+  <div class="subtab-bar">
+    <button class="subtab-btn active" onclick="showSubtab('parent','template',this)">📄 자주 쓰는 문자</button>
+    <button class="subtab-btn" onclick="showSubtab('parent','custom',this)">✍️ 상황별 맞춤 문자</button>
+  </div>
+
+  <div id="parent-sub-template" class="subtab-content active">
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title"><span class="dot" style="background:var(--green)"></span> 학생 선택</div>
+        <select id="pt-student" onchange="fillStudentInfo('pt')"><option value="">-- 학생 선택 --</option></select>
+        <div class="mt12 grid2">
+          <div class="field"><label>학년</label><input type="text" id="pt-grade" placeholder="초5"></div>
+          <div class="field"><label>반</label><input type="text" id="pt-class" placeholder="초등 3회"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot" style="background:var(--orange)"></span> 문자 유형 선택</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <button class="btn btn-secondary" onclick="quickMsg('원비안내')">💰 원비 안내</button>
+          <button class="btn btn-secondary" onclick="quickMsg('결석안내')">📅 결석 처리 안내</button>
+          <button class="btn btn-secondary" onclick="quickMsg('친구소개')">🎁 친구 소개 혜택 안내</button>
+          <button class="btn btn-secondary" onclick="quickMsg('형제할인')">👨‍👩‍👧‍👦 형제 할인 안내</button>
+          <button class="btn btn-secondary" onclick="quickMsg('방학특강')">☀️ 방학 특강 안내</button>
+          <button class="btn btn-secondary" onclick="quickMsg('상담요청')">📞 상담 요청</button>
+        </div>
+      </div>
+    </div>
+    <div class="card mt16">
+      <div class="card-title"><span class="dot" style="background:var(--accent2)"></span> 생성된 문자</div>
+      <div class="output-box" id="pt-output"><span style="color:var(--muted);font-style:italic;">학생과 문자 유형을 선택해주세요.</span></div>
+      <div class="flex flex-end mt8"><button class="btn btn-secondary btn-sm" onclick="copyText('pt-output')">📋 복사</button></div>
+    </div>
+  </div>
+
+  <div id="parent-sub-custom" class="subtab-content">
+    <div class="card">
+      <div class="card-title"><span class="dot"></span> 상황 입력</div>
+      <div class="grid2">
+        <div class="field"><label>학생 이름</label><select id="pc-student" onchange="fillStudentInfo('pc')"><option value="">-- 학생 선택 --</option></select></div>
+        <div class="field"><label>문자 분위기</label><select id="pc-tone"><option value="정중하게">정중하게</option><option value="따뜻하게">따뜻하게</option><option value="간결하게">간결하게</option><option value="공식적으로">공식적으로</option></select></div>
+      </div>
+      <div class="mt12 field"><label>학부모가 보낸 내용 또는 상황 설명</label><textarea id="pc-situation" placeholder="예: 학부모님이 '이번 달 아이가 학원에 흥미를 잃은 것 같다'고 연락이 왔을 때 답장..."></textarea></div>
+      <div class="mt12 field"><label>전달하고 싶은 핵심 내용 (선택)</label><input type="text" id="pc-key" placeholder="예: 다음 주 상담 제안, 특별 관리 약속"></div>
+    </div>
+    <div class="flex flex-end mt8"><button class="btn btn-primary" onclick="generateCustomMsg()">✨ AI로 답장 생성</button></div>
+    <div class="card mt16">
+      <div class="card-title"><span class="dot" style="background:var(--accent2)"></span> 생성된 답장</div>
+      <div class="output-box" id="pc-output"><span style="color:var(--muted);font-style:italic;">상황을 입력하고 생성 버튼을 눌러주세요.</span></div>
+      <div class="flex flex-end mt8">
+        <button class="btn btn-secondary btn-sm" onclick="copyText('pc-output')">📋 복사</button>
+        <button class="btn btn-secondary btn-sm" onclick="generateCustomMsg()">🔄 다시 생성</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ TAB: 블로그 ============ -->
+<div id="tab-blog" class="tab">
+  <div class="section-label">📰 학원 블로그 작성</div>
+  <div class="card">
+    <div class="card-title"><span class="dot"></span> 블로그 주제</div>
+    <div class="grid2">
+      <div class="field"><label>글 유형</label>
+        <select id="blog-type">
+          <option value="수업소개">📚 수업 방식 소개</option>
+          <option value="수학팁">💡 수학 공부 팁</option>
+          <option value="성적향상">📈 성적 향상 사례 (익명)</option>
+          <option value="학원소개">🏫 학원 소개글</option>
+          <option value="시험대비">📝 시험 대비 특강 안내</option>
+          <option value="방학특강">☀️ 방학 특강 안내</option>
+          <option value="원생모집">🎯 원생 모집 안내</option>
+        </select>
+      </div>
+      <div class="field"><label>대상 학년</label>
+        <select id="blog-target"><option value="초등">초등학생</option><option value="중등">중학생</option><option value="고등">고등학생</option><option value="전체">전체</option></select>
+      </div>
+    </div>
+    <div class="mt12 field"><label>핵심 키워드 / 강조 내용</label><input type="text" id="blog-keyword" placeholder="예: 개념 이해 중심, 소수 정예 수업, 성동구 수학학원"></div>
+    <div class="mt12 field"><label>추가로 넣고 싶은 내용</label><textarea id="blog-extra" placeholder="예: 친구 소개 이벤트 (3개월 만원 할인), 형제 할인 적용, 경시대회 준비반 모집 중"></textarea></div>
+    <div class="mt12 field"><label>블로그 글 분량</label>
+      <select id="blog-length">
+        <option value="짧게">짧게 (200~300자 / SNS용)</option>
+        <option value="보통" selected>보통 (500~700자 / 블로그용)</option>
+        <option value="길게">길게 (1000자 이상 / 상세 안내)</option>
+      </select>
+    </div>
+  </div>
+  <div class="flex flex-end mt8"><button class="btn btn-purple" onclick="generateBlog()">✨ AI로 블로그 글 생성</button></div>
+  <div class="card mt16">
+    <div class="card-title"><span class="dot" style="background:var(--accent2)"></span> 생성된 블로그 글</div>
+    <div class="output-box" id="blog-output" style="min-height:200px;"><span style="color:var(--muted);font-style:italic;">위 내용을 선택하고 생성 버튼을 눌러주세요.</span></div>
+    <div class="flex flex-end mt8">
+      <button class="btn btn-secondary btn-sm" onclick="copyText('blog-output')">📋 복사</button>
+      <button class="btn btn-secondary btn-sm" onclick="generateBlog()">🔄 다시 생성</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ TAB: 원비 관리 ============ -->
+<div id="tab-wonbi" class="tab">
+  <div class="section-label">💰 원비 문자 생성</div>
+
+  <!-- STEP 1: 기본 설정 -->
+  <div class="card">
+    <div class="card-title"><span class="dot"></span> ① 기본 설정</div>
+    <div class="grid2">
+      <div class="field"><label>청구 월 *</label><input type="text" id="w-month" value="3월" placeholder="3월"></div>
+      <div class="field"><label>이달 달력 기준 총 수업 가능 회차 *</label><input type="number" id="w-total-sessions" placeholder="예: 14" value="14"></div>
+    </div>
+  </div>
+
+  <!-- STEP 2: 학생별 설정 -->
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:var(--green)"></span> ② 학생별 결석 / 교재비 입력
+      <button class="btn btn-secondary btn-sm" style="margin-left:auto" onclick="initWonbiStudentRows()">🔄 목록 새로고침</button>
+    </div>
+    <div id="wonbi-student-rows"></div>
+  </div>
+
+  <!-- STEP 3: 형제 묶기 -->
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:var(--accent2)"></span> ③ 형제 / 가족 묶기 (한 문자로 합산)
+      <button class="btn btn-secondary btn-sm" style="margin-left:auto" onclick="addSiblingGroup()">+ 그룹 추가</button>
+    </div>
+    <div id="sibling-groups">
+      <div style="color:var(--muted);font-size:13px;font-style:italic;">형제가 있으면 "+ 그룹 추가" 버튼을 눌러주세요.</div>
+    </div>
+  </div>
+
+  <!-- STEP 4: 생성 -->
+  <div class="flex mt8" style="gap:10px;">
+    <button class="btn btn-green" style="flex:1;font-size:15px;padding:14px" onclick="generateWonbiMsgNew()">✨ 원비 문자 일괄 생성</button>
+  </div>
+
+  <div id="wonbi-results" class="mt16"></div>
+
+  <!-- 할인 정책 안내 -->
+  <div class="card mt16">
+    <div class="card-title"><span class="dot" style="background:var(--accent)"></span> 할인 정책 안내</div>
+    <div class="info-box" style="margin-bottom:0">
+      🎁 <strong>친구소개</strong> 3개월 10,000원 할인 &nbsp;|&nbsp;
+      👨‍👩‍👧‍👦 <strong>형제</strong> 계속 10,000원 할인 &nbsp;|&nbsp;
+      🏆 <strong>경시 은/동</strong> 5,000원 · <strong>금/대상</strong> 10,000원 할인
+    </div>
+    <table class="data-table" style="margin-top:16px">
+      <thead><tr><th>이름</th><th>학년·반</th><th>출석요일</th><th>기본원비</th><th>할인</th><th>최종원비</th></tr></thead>
+      <tbody id="wonbi-table-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ============ TAB: 학생 현황 ============ -->
+<div id="tab-students" class="tab">
+  <div class="section-label">👥 학생 현황</div>
+
+  <div class="stats" id="student-stats">
+    <div class="stat-card"><div class="stat-num" style="color:var(--accent)" id="stat-all">-</div><div class="stat-label">전체 원생</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--green)" id="stat-elem">-</div><div class="stat-label">초등부</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--orange)" id="stat-mid">-</div><div class="stat-label">중등부</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--accent2)" id="stat-high">-</div><div class="stat-label">고등부</div></div>
+  </div>
+
+  <div class="flex mt8" style="gap:10px;flex-wrap:wrap;">
+    <button class="btn btn-green" onclick="openRegisterModal()">➕ 신규 등록</button>
+    <input type="text" id="student-search" placeholder="🔍 이름으로 검색..." oninput="renderStudentsTable()" style="max-width:200px;">
+    <label class="check-item" style="margin-left:auto"><input type="checkbox" id="show-withdrawn" onchange="renderStudentsTable()"> 퇴원생 포함 보기</label>
+  </div>
+
+  <div class="card mt12">
+    <table class="data-table">
+      <thead><tr><th>번호</th><th>이름</th><th>학교</th><th>학년</th><th>반</th><th>출석요일</th><th>기본원비</th><th>특이사항</th><th>상태</th></tr></thead>
+      <tbody id="students-table-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 신규 등록 모달 -->
+<div class="modal-overlay hidden" id="registerModal">
+  <div class="modal-box" style="max-width:560px;max-height:90vh;overflow-y:auto;">
+    <div class="modal-title">➕ 신규 학생 등록</div>
+    <div class="grid2 mt12">
+      <div class="field"><label>이름 *</label><input type="text" id="reg-name" placeholder="홍길동"></div>
+      <div class="field"><label>학교명 *</label><input type="text" id="reg-school" placeholder="정덕초등학교"></div>
+    </div>
+    <div class="grid2 mt12">
+      <div class="field"><label>학년 *</label>
+        <select id="reg-grade">
+          <option value="">-- 선택 --</option>
+          <option>초1</option><option>초2</option><option>초3</option><option>초4</option><option>초5</option><option>초6</option>
+          <option>중1</option><option>중2</option><option>중3</option>
+          <option>고1</option><option>고2</option><option>고3</option>
+        </select>
+      </div>
+      <div class="field"><label>반 구분 *</label>
+        <select id="reg-class">
+          <option value="">-- 선택 --</option>
+          <option>초등 2회</option><option>초등 3회</option>
+          <option>중등 3회</option><option>고등 3회</option>
+        </select>
+      </div>
+    </div>
+    <div class="grid2 mt12">
+      <div class="field"><label>출석 요일 *</label><input type="text" id="reg-days" placeholder="월수금"></div>
+      <div class="field"><label>기본 월정액 *</label>
+        <select id="reg-base" onchange="autoFillBase()">
+          <option value="">-- 선택 --</option>
+          <option value="180000">초등 2회 · 180,000원</option>
+          <option value="260000">초등 3회 · 260,000원</option>
+          <option value="360000">중등 3회 · 360,000원</option>
+          <option value="475000">고등 3회 · 475,000원</option>
+          <option value="custom">직접 입력</option>
+        </select>
+        <input type="number" id="reg-base-custom" placeholder="직접 입력 (원)" style="margin-top:6px;display:none;">
+      </div>
+    </div>
+    <div class="grid2 mt12">
+      <div class="field"><label>형제 할인</label>
+        <select id="reg-sibling">
+          <option value="0">없음</option>
+          <option value="10000">적용 (10,000원 할인)</option>
+        </select>
+      </div>
+      <div class="field"><label>친구 소개 할인</label>
+        <select id="reg-friend">
+          <option value="0">없음</option>
+          <option value="1">적용 (3개월 할인)</option>
+        </select>
+      </div>
+    </div>
+    <div class="mt12 field"><label>비고</label><input type="text" id="reg-note" placeholder="특이사항 입력"></div>
+    <div class="mt12 field"><label>등록일</label><input type="date" id="reg-date"></div>
+    <div style="display:flex;gap:10px;margin-top:20px;">
+      <button class="btn btn-green" style="flex:1" onclick="registerStudent()">✅ 등록하기</button>
+      <button class="btn btn-secondary" onclick="closeRegisterModal()">취소</button>
+    </div>
+  </div>
+</div>
+
+<!-- 퇴원 확인 모달 -->
+<div class="modal-overlay hidden" id="withdrawModal">
+  <div class="modal-box" style="max-width:400px;">
+    <div class="modal-title">🚪 퇴원 처리</div>
+    <div class="modal-desc" id="withdraw-desc"></div>
+    <div class="mt12 field"><label>퇴원일</label><input type="date" id="withdraw-date"></div>
+    <div class="mt12 field"><label>퇴원 사유 (선택)</label>
+      <select id="withdraw-reason">
+        <option value="">-- 선택 --</option>
+        <option>이사</option><option>타 학원 이동</option><option>개인 사정</option><option>졸업</option><option>기타</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px;">
+      <button class="btn btn-red" style="flex:1;background:var(--red);color:#fff;" onclick="confirmWithdraw()">퇴원 처리</button>
+      <button class="btn btn-secondary" onclick="closeWithdrawModal()">취소</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ TAB: 수업 기록 ============ -->
+<div id="tab-history" class="tab">
+  <div class="section-label">📋 수업 기록</div>
+  <div class="card">
+    <div class="flex" style="flex-wrap:wrap;gap:10px;align-items:center;">
+      <input type="text" id="searchInput" placeholder="🔍 학생 이름 또는 내용 검색..." oninput="filterHistory()" style="max-width:300px;">
+      <button class="btn btn-green btn-sm" onclick="exportExcel()">📊 엑셀 다운로드</button>
+      <button class="btn btn-secondary btn-sm" onclick="clearHistory()">🗑 기록 삭제</button>
+    </div>
+  </div>
+  <div class="card" id="historyArea">
+    <div style="text-align:center;padding:40px;color:var(--muted)">
+      <div style="font-size:40px;margin-bottom:12px">📂</div>
+      <p>저장된 기록이 없습니다.<br>수업메모 피드백 탭에서 문자를 생성하면 자동으로 기록됩니다.</p>
+    </div>
+  </div>
+</div>
+
+</div><!-- end .main -->
+
+
+    <div class="modal-desc">
+      AI 기능을 사용하려면 Anthropic API 키가 필요합니다.<br>
+      키는 브라우저에 안전하게 저장되며 외부로 전송되지 않습니다.<br><br>
+      API 키 발급: <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a><br>
+      (무료 크레딧으로 시작 가능)
+    </div>
+    <label style="font-size:12px;color:var(--muted);margin-bottom:6px;display:block;font-weight:600">API 키 입력</label>
+    <input type="password" class="api-key-input" id="apiKeyInput" placeholder="sk-ant-api03-..." autocomplete="off">
+    <div class="api-status" id="apiStatusMsg"></div>
+    <div style="display:flex;gap:10px;margin-top:20px;">
+      <button class="btn btn-primary" style="flex:1" onclick="saveApiKey()">저장하고 시작하기</button>
+      <button class="btn btn-secondary" onclick="closeApiModal()">닫기</button>
+    </div>
+    <div style="margin-top:12px;font-size:11px;color:var(--muted);text-align:center">
+      저장된 키는 이 브라우저에서만 유지됩니다
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===================== STUDENT DATA =====================
+const students = [
+  {no:1,name:"고영민",school:"정덕초",grade:"초5",class_:"초등 2회",days:"수금",base:215000,discount:0,discountType:"",sibling:0,friend:0,final:225000},
+  {no:2,name:"고하은",school:"정덕초",grade:"중1",class_:"중등 3회",days:"월수금",base:215000,discount:0,discountType:"",sibling:0,friend:0,final:420000},
+  {no:3,name:"김민지",school:"한성여고",grade:"고1",class_:"고등 3회",days:"월수금",base:475000,discount:0,discountType:"",sibling:0,friend:0,final:554162},
+  {no:4,name:"이진구",school:"정덕초",grade:"초3",class_:"초등 3회",days:"월수금",base:260000,discount:10000,discountType:"형제",sibling:10000,friend:0,final:303338},
+  {no:5,name:"이윤서",school:"정덕초",grade:"초6",class_:"초등 2회",days:"월수",base:173000,discount:22500,discountType:"친구소개",sibling:0,friend:22500,final:180000,friendNote:"2회차, 4월 마지막"},
+  {no:6,name:"문선우",school:"성신초",grade:"중1",class_:"중등 3회",days:"월화금",base:360000,discount:0,discountType:"",sibling:0,friend:0,final:390000},
+  {no:7,name:"민서진",school:"성신초",grade:"중1",class_:"중등 3회",days:"화목금",base:360000,discount:0,discountType:"",sibling:0,friend:0,final:420000},
+  {no:8,name:"박다온",school:"남산초",grade:"초5",class_:"초등 3회",days:"월수목",base:260000,discount:0,discountType:"",sibling:0,friend:0,final:303338},
+  {no:9,name:"황재경",school:"정덕초",grade:"초6",class_:"초등 3회",days:"화수금",base:260000,discount:0,discountType:"",sibling:0,friend:0,final:303338},
+  {no:10,name:"서채연",school:"우촌초",grade:"중1",class_:"중등 3회",days:"화목금",base:360000,discount:0,discountType:"",sibling:0,friend:0,final:420000},
+  {no:11,name:"임지호",school:"정덕초",grade:"초6",class_:"초등 3회",days:"월목금",base:260000,discount:0,discountType:"",sibling:0,friend:0,final:303338},
+  {no:12,name:"이사랑",school:"정덕초",grade:"초6",class_:"초등 3회",days:"월화목",base:260000,discount:10000,discountType:"형제",sibling:10000,friend:0,final:281671},
+  {no:13,name:"김다율",school:"대광초",grade:"초5",class_:"초등 2회",days:"화수",base:173000,discount:0,discountType:"",sibling:0,friend:0,final:202500},
+  {no:14,name:"윤서현",school:"성신초",grade:"초4",class_:"초등 2회",days:"월수",base:180000,discount:0,discountType:"",sibling:0,friend:0,final:202500},
+  {no:15,name:"이승우",school:"정덕초",grade:"초4",class_:"초등 2회",days:"월금",base:180000,discount:0,discountType:"",sibling:0,friend:0,final:202500},
+  {no:16,name:"김민지",school:"성신초",grade:"초5",class_:"초등 2회",days:"월수금",base:180000,discount:0,discountType:"",sibling:0,friend:0,final:315000},
+  {no:17,name:"배연후",school:"성신여중",grade:"중2",class_:"중등 3회",days:"월수목",base:360000,discount:0,discountType:"",sibling:0,friend:0,final:420000},
+  {no:18,name:"장이주",school:"정덕초",grade:"초4",class_:"초등 2회",days:"화목",base:180000,discount:0,discountType:"",sibling:0,friend:0,final:202500},
+  {no:19,name:"이시연",school:"성신여고",grade:"고1",class_:"고등 3회",days:"월수목",base:475000,discount:10000,discountType:"형제",sibling:10000,friend:0,final:554162},
+  {no:20,name:"박시윤",school:"정덕초",grade:"초6",class_:"초등 2회",days:"화목",base:180000,discount:0,discountType:"",sibling:0,friend:0,final:202500},
+  {no:21,name:"김휘",school:"정덕초",grade:"초4",class_:"초등 2회",days:"월금",base:180000,discount:0,discountType:"",sibling:0,friend:0,final:202500},
+  {no:22,name:"김나연",school:"정덕초",grade:"초4",class_:"초등 2회",days:"화목",base:180000,discount:0,discountType:"",sibling:0,friend:0,final:202500},
+  {no:23,name:"고승휘",school:"정덕초",grade:"초3",class_:"초등 2회",days:"화목",base:180000,discount:0,discountType:"",sibling:0,friend:0,final:202500,note:"3월분까지 2/20"},
+  {no:24,name:"임민아",school:"정덕초",grade:"초4",class_:"초등 2회",days:"월금",base:180000,discount:0,discountType:"",sibling:0,friend:0,final:202500},
+  {no:25,name:"채예원",school:"정덕초",grade:"초6",class_:"초등 3회",days:"월수금",base:260000,discount:10000,discountType:"친구소개",sibling:0,friend:10000,final:293338,friendNote:"2회차, 4월 마지막"},
+  {no:26,name:"최연경",school:"동구여중",grade:"중2",class_:"중등 3회",days:"월수금",base:360000,discount:0,discountType:"",sibling:0,friend:0,final:420000},
+  {no:27,name:"이시우",school:"삼선중",grade:"중2",class_:"중등 3회",days:"월수목",base:360000,discount:10000,discountType:"형제",sibling:10000,friend:0,final:420000},
+  {no:28,name:"엄지효",school:"서사부초",grade:"초6",class_:"초등 2회",days:"화금",base:180000,discount:0,discountType:"",sibling:0,friend:0,final:202500},
+  {no:29,name:"박민형",school:"정덕초",grade:"초6",class_:"초등 3회",days:"화목금",base:260000,discount:0,discountType:"",sibling:0,friend:0,final:303338},
+  {no:30,name:"신지원",school:"우촌초",grade:"초6",class_:"중등 3회",days:"월수금",base:360000,discount:5000,discountType:"경시",sibling:0,friend:0,final:415000},
+  {no:31,name:"김세연",school:"미래산업과학고",grade:"고1",class_:"고등 3회",days:"월수금",base:475000,discount:0,discountType:"",sibling:0,friend:0,final:554162},
+  {no:32,name:"원이안",school:"정덕초",grade:"초3",class_:"초등 3회",days:"월화목",base:260000,discount:0,discountType:"",sibling:0,friend:0,final:281671},
+];
+
+// ===================== INIT =====================
+function init() {
+  loadStudents();
+  refreshAllSelects();
+  const today = new Date().toISOString().split('T')[0];
+  ['classDate','fb-date'].forEach(id => { const el = document.getElementById(id); if(el) el.value = today; });
+  renderWonbiTable();
+  renderStudentsTable();
+  initWonbiStudentList();
+  renderHistory();
+}
+
+function getStudent(selId) {
+  const v = document.getElementById(selId)?.value;
+  return v ? students.find(s => s.no == v) : null;
+}
+
+function fillStudentInfo(prefix) {
+  const s = getStudent(prefix + '-student');
+  if (!s) return;
+  const g = document.getElementById(prefix + '-grade');
+  const c = document.getElementById(prefix + '-class');
+  if (g) g.value = s.grade;
+  if (c) c.value = s.class_;
+}
+
+// ===================== TABS =====================
+function showTab(name, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+  if (name === 'history') renderHistory();
+}
+
+function showSubtab(parent, name, btn) {
+  document.querySelectorAll(`[id^="${parent}-sub-"]`).forEach(t => t.classList.remove('active'));
+  btn.closest('.subtab-bar').querySelectorAll('.subtab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(`${parent}-sub-${name}`).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ===================== TOAST =====================
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ===================== CLAUDE API =====================
+async function callClaude(prompt, outputId) {
+  const box = document.getElementById(outputId);
+  box.innerHTML = '<span class="spinner"></span> AI가 작성 중입니다...';
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:1000, messages:[{role:'user',content:prompt}] })
+    });
+    const data = await res.json();
+    const text = data.content?.find(c => c.type==='text')?.text || '오류가 발생했습니다.';
+    box.dataset.raw = text;
+    box.innerHTML = text.replace(/\n/g,'<br>');
+  } catch(e) {
+    box.innerHTML = '<span style="color:var(--red)">오류가 발생했습니다. 다시 시도해주세요.</span>';
+  }
+}
+
+function copyText(id) {
+  const box = document.getElementById(id);
+  const text = box.dataset.raw || box.innerText;
+  navigator.clipboard.writeText(text).then(() => showToast('📋 복사되었습니다!'));
+}
+
+// ===================== MEMO FEEDBACK (원래 피드백 앱) =====================
+function parseMemo(raw) {
+  const parts = raw.split(/——|—-|—–|---|---/).map(s => s.trim()).filter(Boolean);
+  return parts.map(part => {
+    const match = part.match(/^([^\n/]+?)\s*\/\s*([\s\S]+)$/);
+    if (!match) return null;
+    return { name: match[1].trim(), memo: match[2].trim() };
+  }).filter(Boolean);
+}
+
+async function generateMessages() {
+  const raw = document.getElementById('memoInput').value.trim();
+  if (!raw) { showToast('수업 메모를 입력해주세요'); return; }
+  const classDate = document.getElementById('classDate').value;
+  const parsed = parseMemo(raw);
+  if (parsed.length === 0) { showToast('학생 정보를 인식하지 못했습니다. 형식을 확인해주세요.'); return; }
+
+  const bar = document.getElementById('loadingBar');
+  bar.style.width = '0%';
+  setTimeout(() => bar.style.width = '60%', 100);
+
+  const area = document.getElementById('memoResultArea');
+  area.innerHTML = `<div style="text-align:center;padding:40px;color:var(--muted)"><div style="font-size:36px;margin-bottom:12px">⏳</div><p>AI가 문자를 작성 중입니다...<br><small>${parsed.length}명 처리 중</small></p></div>`;
+
+  const prompt = `당신은 수학학원 원장이 학부모에게 보내는 수업 피드백 카카오톡 메시지를 작성하는 전문가입니다.
+
+다음 수업 메모들을 바탕으로 학부모에게 보낼 개별 메시지를 작성하세요.
+
+**메시지 형식 (반드시 이 형식 준수):**
+▶ 과제 안내 디딤돌 풀어오기 입니다.
+▶ [학생이름]이는/은 오늘 [수업 내용 요약].
+[숙제나 다음 수업 계획이 있으면 마지막에 한 문장으로 추가]
+
+**작성 규칙:**
+- 첫 줄은 반드시 "▶ 과제 안내 ..." 형식 (숙제가 있으면 구체적으로, 없으면 "▶ 과제 안내 없습니다." 등 자연스럽게)
+- 둘째 줄은 "▶ [이름]이는/은 오늘 ..." 형식으로 수업 내용 서술
+- "안녕하세요" 등 인사말 절대 포함하지 말 것
+- 이모지 사용하지 말 것 (▶ 기호만 사용)
+- 담담하고 전문적인 톤, 2~4줄로 간결하게
+- 숙제나 다음 계획이 있으면 마지막에 한 문장으로 자연스럽게 추가
+
+**수업 메모:**
+${parsed.map((s,i) => `[학생 ${i+1}] ${s.name}: ${s.memo}`).join('\n')}
+
+**출력 형식 (반드시 이 JSON 형식으로만 응답):**
+{"results": [{"name": "학생이름", "message": "작성된 메시지 내용"}]}
+
+JSON 외 다른 텍스트는 절대 포함하지 마세요.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:4000, messages:[{role:'user',content:prompt}] })
+    });
+    const data = await res.json();
+    bar.style.width = '100%';
+    let text = data.content[0].text;
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('파싱 오류');
+    const parsed2 = JSON.parse(jsonMatch[0]);
+    setTimeout(() => bar.style.width = '0%', 500);
+    renderMemoResults(parsed2.results, classDate, parsed);
+  } catch(err) {
+    bar.style.width = '0%';
+    const fallback = parsed.map(s => ({ name: s.name, message: `▶ 과제 안내 확인 부탁드립니다.\n▶ ${s.name}이는 오늘 ${s.memo.slice(0,50)}...\n다음 시간에도 성실히 지도하겠습니다.` }));
+    renderMemoResults(fallback, classDate, parsed);
+  }
+}
+
+function renderMemoResults(results, classDate, origParsed) {
+  saveHistory(classDate, results);
+  window._memoResults = results;
+  const area = document.getElementById('memoResultArea');
+
+  let html = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin:20px 0 16px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+      <span style="font-weight:700">✅ 문자 생성 완료 · ${results.length}명 · ${classDate}</span>
+      <button class="btn btn-orange btn-sm" onclick="copyAllMemo()">📋 전체 복사</button>
+    </div>
+    <div class="result-cards">`;
+
+  results.forEach((r, i) => {
+    html += `
+      <div class="result-card">
+        <div class="result-card-header">
+          <div class="result-card-name">👤 ${r.name} <span class="tag tag-blue">${i+1}/${results.length}</span></div>
+          <button class="btn btn-secondary btn-sm" onclick="copyMemoMsg(${i})" id="mbtn_${i}">📋 복사</button>
+        </div>
+        <div class="result-card-body" id="mmsg_${i}">${r.message.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+      </div>`;
+  });
+  html += '</div>';
+  area.innerHTML = html;
+}
+
+function copyMemoMsg(i) {
+  const text = document.getElementById(`mmsg_${i}`).textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById(`mbtn_${i}`);
+    btn.textContent = '✅ 복사됨';
+    showToast(`${window._memoResults[i].name} 문자 복사 완료!`);
+    setTimeout(() => btn.textContent = '📋 복사', 2000);
+  });
+}
+
+function copyAllMemo() {
+  if (!window._memoResults) return;
+  const all = window._memoResults.map(r => `[ ${r.name} ]\n${r.message}`).join('\n\n─────────────────\n\n');
+  navigator.clipboard.writeText(all).then(() => showToast('전체 문자 복사 완료!'));
+}
+
+function clearMemo() {
+  document.getElementById('memoInput').value = '';
+  document.getElementById('memoResultArea').innerHTML = '';
+  window._memoResults = null;
+}
+
+// ===================== INDIVIDUAL FEEDBACK =====================
+async function generateFeedback() {
+  const s = getStudent('fb-student');
+  const name = s ? s.name : '학생';
+  const grade = s ? `${s.grade} (${s.class_})` : document.getElementById('fb-grade').value;
+  const date = document.getElementById('fb-date').value;
+  const topic = document.getElementById('fb-topic').value || '오늘 수업 내용';
+  const mood = document.getElementById('fb-mood').value;
+  const good = document.getElementById('fb-good').value;
+  const improve = document.getElementById('fb-improve').value;
+  const next = document.getElementById('fb-next').value;
+  const warm = document.getElementById('fb-opt-warm').checked;
+  const hw = document.getElementById('fb-opt-hw').checked;
+  const short = document.getElementById('fb-opt-short').checked;
+
+  const prompt = `수학학원 원장이 학부모에게 보내는 수업 피드백 카카오톡 메시지를 작성해주세요.
+
+학생: ${name} (${grade}) / 수업일: ${date}
+수업 주제: ${topic} / 분위기: ${mood}
+잘한 점: ${good || '없음'}
+보완할 점/숙제: ${improve || '없음'}
+다음 수업 예고: ${next || '없음'}
+
+**반드시 아래 형식으로 작성:**
+▶ 과제 안내 [숙제 내용 또는 "없습니다."]
+▶ ${name}이는/은 오늘 [수업 내용 요약. ${mood} 분위기.${good?' '+good+'.':''}]
+${improve ? '[다음 줄에 보완할 점이나 숙제 한 문장]' : ''}${next ? '[다음 줄에 다음 수업 예고 한 문장]' : ''}
+
+규칙: "안녕하세요" 등 인사말 없음 / 이모지 없음 (▶만 사용) / ${short?'전체 3줄 이내':'2~4줄 간결하게'}
+메시지 내용만 작성하세요.`;
+
+  await callClaude(prompt, 'fb-output');
+}
+
+// ===================== PARENT MESSAGES =====================
+async function quickMsg(type) {
+  const s = getStudent('pt-student');
+  const name = s ? s.name : '학생';
+  const grade = s ? s.grade : document.getElementById('pt-grade').value || '';
+  const cls = s ? s.class_ : document.getElementById('pt-class').value || '';
+  let prompt = '';
+  if (type==='원비안내') {
+    const final = s ? s.final.toLocaleString() : '---';
+    const dn = s && s.discount > 0 ? `(${s.discountType} 할인 ${s.discount.toLocaleString()}원 적용)` : '';
+    prompt = `루체수학 학원에서 학부모님께 보내는 원비 안내 문자. 학생: ${name} (${grade}/${cls}), 최종원비: ${final}원 ${dn}. 정중하고 따뜻하게 2-3줄, 이모지 1개. 문자 내용만.`;
+  } else if (type==='결석안내') {
+    prompt = `루체수학 학원에서 학부모님께 보내는 결석 처리 안내. 학생: ${name} (${grade}). 결석으로 해당 회차 수업료가 차감됨을 정중히 안내. 2-3줄. 문자 내용만.`;
+  } else if (type==='친구소개') {
+    prompt = `루체수학 학원 친구 소개 이벤트 안내 문자. 친구 소개 시 소개해주신 분께 3개월간 매달 10,000원 할인. 따뜻하게 3-4줄, 이모지 1-2개. 문자 내용만.`;
+  } else if (type==='형제할인') {
+    prompt = `루체수학 학원 형제 할인 안내. 학생: ${name}. 형제가 함께 다니면 재원 기간 동안 매달 10,000원 할인. 따뜻하게 2-3줄. 문자 내용만.`;
+  } else if (type==='방학특강') {
+    prompt = `루체수학 방학 특강 안내. 학생: ${name} (${grade}/${cls}). 초등3주 110,000원, 중등3주 150,000원, 고등3주 200,000원. 흥미롭고 따뜻하게 3-4줄, 이모지 1개. 문자 내용만.`;
+  } else if (type==='상담요청') {
+    prompt = `루체수학 학원에서 학부모님께 상담 제안 문자. 학생: ${name} (${grade}). 부담 없이 편하게 연락 요청. 2-3줄. 문자 내용만.`;
+  }
+  await callClaude(prompt, 'pt-output');
+}
+
+async function generateCustomMsg() {
+  const s = getStudent('pc-student');
+  const name = s ? s.name : '학생';
+  const grade = s ? s.grade : '';
+  const tone = document.getElementById('pc-tone').value;
+  const situation = document.getElementById('pc-situation').value;
+  const key = document.getElementById('pc-key').value;
+  const prompt = `루체수학 학원 선생님으로서 학부모님께 보내는 답장 문자.
+학생: ${name}${grade?` (${grade})`:''}
+상황: ${situation}
+${key?`전달할 핵심: ${key}`:''}
+분위기: ${tone}, 학원명: 루체수학. 문자 내용만 작성.`;
+  await callClaude(prompt, 'pc-output');
+}
+
+// ===================== BLOG =====================
+async function generateBlog() {
+  const type = document.getElementById('blog-type').value;
+  const target = document.getElementById('blog-target').value;
+  const keyword = document.getElementById('blog-keyword').value;
+  const extra = document.getElementById('blog-extra').value;
+  const length = document.getElementById('blog-length').value;
+  const lenMap = {짧게:'200~300자 SNS용',보통:'500~700자 블로그',길게:'1000자 이상 상세'};
+  const prompt = `루체수학 수학학원의 ${type} 블로그/SNS 글 작성.
+대상: ${target}학생 / 분량: ${lenMap[length]}
+학원정보: 초등3회 260,000원, 중등3회 360,000원, 고등3회 475,000원, 초등2회 180,000원
+친구소개: 3개월 매달 10,000원 할인 / 형제할인: 계속 10,000원 할인
+키워드: ${keyword||'없음'} / 추가내용: ${extra||'없음'}
+자연스럽고 신뢰감 있게. 해시태그 3-5개 포함. 글 내용만 작성.`;
+  await callClaude(prompt, 'blog-output');
+}
+
+// ===================== WONBI =====================
+
+// 학생별 행 렌더링 (결석일 입력 + 교재비)
+function initWonbiStudentRows() {
+  const container = document.getElementById('wonbi-student-rows');
+  if (!container) return;
+  const active = students.filter(s => !s.withdrawn);
+  if (active.length === 0) {
+    container.innerHTML = '<div style="color:var(--muted);font-size:13px">등록된 학생이 없습니다.</div>';
+    return;
+  }
+
+  let html = `
+  <div style="overflow-x:auto">
+  <table class="data-table" style="min-width:700px">
+    <thead><tr>
+      <th>포함</th><th>이름</th><th>학년·반</th><th>기본원비</th>
+      <th>결석 날짜 (보충 제외할 날짜, 쉼표로 구분)</th>
+      <th>교재명</th><th>교재비(원)</th>
+    </tr></thead>
+    <tbody>`;
+
+  active.forEach(s => {
+    html += `<tr>
+      <td><input type="checkbox" class="wonbi-include" data-no="${s.no}" checked style="accent-color:var(--green);width:auto"></td>
+      <td><strong>${s.name}</strong></td>
+      <td style="color:var(--muted)">${s.grade}·${s.class_}</td>
+      <td style="color:var(--accent)">${s.final.toLocaleString()}</td>
+      <td><input type="text" class="wonbi-absent" data-no="${s.no}" placeholder="예: 3/5, 3/12" style="font-size:12px;padding:6px 8px"></td>
+      <td><input type="text" class="wonbi-book" data-no="${s.no}" placeholder="예: 최고수준" style="font-size:12px;padding:6px 8px"></td>
+      <td><input type="number" class="wonbi-bookprice" data-no="${s.no}" placeholder="0" style="font-size:12px;padding:6px 8px"></td>
+    </tr>`;
+  });
+
+  html += '</tbody></table></div>';
+  container.innerHTML = html;
+}
+
+// 형제 그룹
+let _siblingGroupCount = 0;
+function addSiblingGroup() {
+  const container = document.getElementById('sibling-groups');
+  if (_siblingGroupCount === 0) container.innerHTML = '';
+  _siblingGroupCount++;
+  const id = _siblingGroupCount;
+  const active = students.filter(s => !s.withdrawn);
+
+  const div = document.createElement('div');
+  div.id = `sg-${id}`;
+  div.style.cssText = 'background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:10px;';
+  div.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <span style="font-size:13px;font-weight:600">그룹 ${id}</span>
+      <button class="btn btn-sm" style="background:rgba(247,95,95,0.15);color:var(--red);border:1px solid rgba(247,95,95,0.3)" onclick="document.getElementById('sg-${id}').remove()">✕ 삭제</button>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px" id="sg-pills-${id}">
+      ${active.map(s => `<label class="check-item" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px">
+        <input type="checkbox" class="sg-chk-${id}" data-no="${s.no}" style="accent-color:var(--accent2);width:auto"> ${s.name} <span style="color:var(--muted)">${s.grade}</span>
+      </label>`).join('')}
+    </div>`;
+  container.appendChild(div);
+}
+
+// 회차 계산 (결석 날짜 파싱 → 이달 출석 요일과 교차)
+function calcSessions(totalSessions, absentStr, studentDays) {
+  if (!absentStr || !absentStr.trim()) return { sessions: totalSessions, absentDates: [] };
+
+  // 결석 날짜 파싱 (예: "3/5, 3/12, 18" → 해당 월의 날짜로)
+  const dates = absentStr.split(/[,，\s]+/).map(d => d.trim()).filter(Boolean);
+  let absentCount = 0;
+  const parsedDates = [];
+
+  dates.forEach(d => {
+    // 숫자만이면 일(day)로 처리
+    const dayMatch = d.match(/^(\d{1,2})$/);
+    const mdMatch = d.match(/^(\d{1,2})[\/\-](\d{1,2})$/);
+    if (dayMatch || mdMatch) {
+      parsedDates.push(d);
+      absentCount++;
+    }
+  });
+
+  return {
+    sessions: Math.max(0, totalSessions - absentCount),
+    absentDates: parsedDates
+  };
+}
+
+// 문자 생성 메인
+function generateWonbiMsgNew() {
+  const month = document.getElementById('w-month').value.trim() || '이번 달';
+  const totalSessions = parseInt(document.getElementById('w-total-sessions').value) || 14;
+
+  // 포함된 학생 수집
+  const included = Array.from(document.querySelectorAll('.wonbi-include:checked')).map(c => parseInt(c.dataset.no));
+  if (included.length === 0) { showToast('학생을 한 명 이상 포함해주세요'); return; }
+
+  // 학생별 데이터 수집
+  const studentData = {};
+  included.forEach(no => {
+    const s = students.find(st => st.no === no);
+    if (!s) return;
+    const absentStr = document.querySelector(`.wonbi-absent[data-no="${no}"]`)?.value || '';
+    const book = document.querySelector(`.wonbi-book[data-no="${no}"]`)?.value?.trim() || '';
+    const bookPrice = parseInt(document.querySelector(`.wonbi-bookprice[data-no="${no}"]`)?.value) || 0;
+    const { sessions, absentDates } = calcSessions(totalSessions, absentStr, s.days);
+    studentData[no] = { s, sessions, absentDates, book, bookPrice };
+  });
+
+  // 형제 그룹 수집
+  const siblingGroups = [];
+  document.querySelectorAll('[id^="sg-"]').forEach(el => {
+    const id = el.id.replace('sg-', '');
+    const checked = Array.from(el.querySelectorAll(`.sg-chk-${id}:checked`)).map(c => parseInt(c.dataset.no));
+    if (checked.length >= 2) siblingGroups.push(checked);
+  });
+
+  // 그룹에 속한 학생 no 집합
+  const inGroup = new Set(siblingGroups.flat());
+
+  // 결과 메시지 배열
+  const results = [];
+
+  // 형제 그룹 → 합산 문자
+  siblingGroups.forEach(group => {
+    const groupStudents = group.filter(no => included.includes(no)).map(no => studentData[no]).filter(Boolean);
+    if (groupStudents.length === 0) return;
+    results.push(buildMsg(month, groupStudents, true));
+  });
+
+  // 개별 학생 (그룹 미포함)
+  included.forEach(no => {
+    if (inGroup.has(no)) return;
+    const d = studentData[no];
+    if (!d) return;
+    results.push(buildMsg(month, [d], false));
+  });
+
+  renderWonbiResults(results);
+}
+
+function buildMsg(month, dataList, isGroup) {
+  const lines = [];
+  lines.push(`▶️ ${month} 원비 안내드립니다.`);
+
+  let grandTotal = 0;
+  const absentNotes = [];
+
+  dataList.forEach(({ s, sessions, absentDates, book, bookPrice }) => {
+    // 할인 텍스트
+    const discParts = [];
+    if (s.friend > 0) discParts.push('친구소개 할인');
+    if (s.sibling > 0) discParts.push('형제 할인');
+    if (s.discountType === '경시') discParts.push('경시대회 수상 할인');
+
+    // 회차 기준 원비 = (final / totalSessions) * sessions 으로 재계산
+    // 단, 결석 없으면 그냥 final 사용
+    const sessionFee = sessions === 14
+      ? s.final
+      : Math.round((s.final / 14) * sessions);
+
+    let line = isGroup
+      ? `${s.name} ${month} 원비 (${sessions}회차 수업) ${sessionFee.toLocaleString()}원`
+      : `${month} 원비 (${sessions}회차 수업) ${sessionFee.toLocaleString()}원`;
+
+    if (discParts.length > 0) line += `, ${discParts.join(', ')} 적용하여`;
+
+    if (!isGroup && discParts.length === 0 && bookPrice === 0) {
+      line += ` 입니다.`;
+    } else if (!isGroup) {
+      line += discParts.length > 0 ? '' : '';
+    }
+
+    lines.push(line + (isGroup ? ' 입니다.' : (discParts.length > 0 ? '' : '')));
+    grandTotal += sessionFee;
+
+    // 교재비
+    if (bookPrice > 0) {
+      const bookLine = isGroup
+        ? `${s.name} ${book||'교재'} 교재비 ${bookPrice.toLocaleString()}원 입니다.`
+        : `${book||'교재'} 교재비 ${bookPrice.toLocaleString()}원 입니다.`;
+      lines.push(bookLine);
+      grandTotal += bookPrice;
+    }
+
+    // 결석 날짜 메모
+    if (absentDates.length > 0) {
+      absentNotes.push(`${isGroup ? s.name + ' ' : ''}${absentDates.join(', ')} 결석은 보충으로 진행하기에 회차 계산에서 제외하였습니다.`);
+    }
+  });
+
+  // 단일 학생이고 discParts 있으면 총합 줄 추가
+  if (dataList.length === 1 && dataList[0].book && dataList[0].bookPrice > 0) {
+    lines.push(`총합 ${grandTotal.toLocaleString()}원 입니다.`);
+  } else if (dataList.length === 1 && dataList[0].s.discount > 0) {
+    // 할인 적용된 경우 마지막 줄 조정
+    const last = lines[lines.length - 1];
+    if (!last.includes('입니다')) lines[lines.length - 1] += ` 총 ${grandTotal.toLocaleString()}원 입니다.`;
+  } else if (isGroup) {
+    lines.push(`총합 ${grandTotal.toLocaleString()}원 입니다.`);
+  }
+
+  // 결석 안내
+  absentNotes.forEach(note => lines.push(note));
+
+  const names = dataList.map(d => d.s.name).join(', ');
+  return { names, msg: lines.join('\n') };
+}
+
+function renderWonbiResults(results) {
+  const area = document.getElementById('wonbi-results');
+  if (!results.length) { area.innerHTML = ''; return; }
+
+  let html = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <span style="font-weight:700;font-size:15px">✅ ${results.length}건 생성 완료</span>
+      <button class="btn btn-orange btn-sm" onclick="copyAllWonbi()">📋 전체 복사</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;">`;
+
+  results.forEach((r, i) => {
+    html += `
+      <div class="result-card">
+        <div class="result-card-header">
+          <div class="result-card-name">💰 ${r.names}</div>
+          <button class="btn btn-secondary btn-sm" onclick="copyWonbiMsg(${i})">📋 복사</button>
+        </div>
+        <div class="result-card-body" id="wmsg_${i}" style="white-space:pre-wrap;font-size:14px;line-height:1.8">${r.msg}</div>
+      </div>`;
+  });
+  html += '</div>';
+  area.innerHTML = html;
+  window._wonbiResults = results;
+}
+
+function copyWonbiMsg(i) {
+  const text = document.getElementById(`wmsg_${i}`).textContent;
+  navigator.clipboard.writeText(text).then(() => showToast('📋 복사되었습니다!'));
+}
+
+function copyAllWonbi() {
+  if (!window._wonbiResults) return;
+  const all = window._wonbiResults.map(r => r.msg).join('\n\n──────────────\n\n');
+  navigator.clipboard.writeText(all).then(() => showToast('전체 복사 완료!'));
+}
+
+function initWonbiStudentList() { initWonbiStudentRows(); }
+async function generateWonbiMsg() { generateWonbiMsgNew(); }
+
+function renderWonbiTable() {
+  const tbody = document.getElementById('wonbi-table-body');
+  students.forEach(s => {
+    let badge = '';
+    if (s.discount > 0) {
+      const c = s.discountType==='친구소개'?'tag-green':s.discountType==='형제'?'tag-purple':'tag-orange';
+      badge = `<span class="tag ${c}">${s.discountType} -${s.discount.toLocaleString()}</span>`;
+    }
+    tbody.innerHTML += `<tr>
+      <td><strong>${s.name}</strong></td>
+      <td>${s.grade} · ${s.class_}</td>
+      <td style="color:var(--muted)">${s.days}</td>
+      <td style="color:var(--muted)">${s.base.toLocaleString()}</td>
+      <td>${badge||'<span style="color:var(--muted)">-</span>'}</td>
+      <td><strong style="color:var(--accent)">${s.final.toLocaleString()}원</strong></td>
+    </tr>`;
+  });
+}
+
+// ===================== STUDENT MANAGEMENT =====================
+function loadStudents() {
+  try {
+    const saved = localStorage.getItem('luche_students');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      students.length = 0;
+      parsed.forEach(s => students.push(s));
+    }
+  } catch(e) {}
+}
+
+function saveStudents() {
+  try { localStorage.setItem('luche_students', JSON.stringify(students)); } catch(e) {}
+}
+
+function renderStudentsTable() {
+  const tbody = document.getElementById('students-table-body');
+  const showWithdrawn = document.getElementById('show-withdrawn')?.checked;
+  const searchQ = (document.getElementById('student-search')?.value || '').trim();
+
+  const filtered = students.filter(s => {
+    if (!showWithdrawn && s.withdrawn) return false;
+    if (searchQ && !s.name.includes(searchQ)) return false;
+    return true;
+  });
+
+  tbody.innerHTML = '';
+  filtered.forEach(s => {
+    let badges = '';
+    if (s.discount > 0) {
+      const c = s.discountType==='친구소개'?'tag-green':s.discountType==='형제'?'tag-purple':'tag-orange';
+      badges += `<span class="tag ${c}">${s.discountType}</span> `;
+    }
+    if (s.note) badges += `<span class="tag tag-orange" style="font-size:10px">${s.note}</span>`;
+
+    const isWithdrawn = !!s.withdrawn;
+    const rowStyle = isWithdrawn ? 'opacity:0.45;' : '';
+    const statusBadge = isWithdrawn
+      ? `<span class="tag" style="background:rgba(247,95,95,0.15);color:var(--red)">퇴원 ${s.withdrawDate||''}</span>`
+      : `<span class="tag tag-green">재원중</span>`;
+
+    const actionBtn = isWithdrawn
+      ? `<button class="btn btn-secondary btn-sm" onclick="reEnroll(${s.no})" style="font-size:11px">재등록</button>`
+      : `<button class="btn btn-sm" style="background:rgba(247,95,95,0.15);color:var(--red);border:1px solid rgba(247,95,95,0.3);font-size:11px" onclick="openWithdrawModal(${s.no})">퇴원</button>`;
+
+    tbody.innerHTML += `<tr style="${rowStyle}">
+      <td style="color:var(--muted)">${s.no}</td>
+      <td><strong>${s.name}</strong></td>
+      <td style="color:var(--muted)">${s.school}</td>
+      <td>${s.grade}</td>
+      <td><span class="tag tag-blue">${s.class_}</span></td>
+      <td style="color:var(--muted)">${s.days}</td>
+      <td style="color:var(--accent)">${s.base.toLocaleString()}</td>
+      <td>${badges}</td>
+      <td>${statusBadge} ${actionBtn}</td>
+    </tr>`;
+  });
+
+  // Update stats
+  const active = students.filter(s => !s.withdrawn);
+  const el = (id, v) => { const el = document.getElementById(id); if(el) el.textContent = v; };
+  el('stat-all', active.length);
+  el('stat-elem', active.filter(s => s.grade.startsWith('초')).length);
+  el('stat-mid', active.filter(s => s.grade.startsWith('중')).length);
+  el('stat-high', active.filter(s => s.grade.startsWith('고')).length);
+}
+
+// 신규 등록
+function openRegisterModal() {
+  document.getElementById('registerModal').classList.remove('hidden');
+  document.getElementById('reg-date').value = new Date().toISOString().split('T')[0];
+  ['reg-name','reg-school','reg-note'].forEach(id => document.getElementById(id).value = '');
+  ['reg-grade','reg-class','reg-base','reg-sibling','reg-friend'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('reg-base-custom').style.display = 'none';
+}
+function closeRegisterModal() { document.getElementById('registerModal').classList.add('hidden'); }
+
+function autoFillBase() {
+  const sel = document.getElementById('reg-base').value;
+  const custom = document.getElementById('reg-base-custom');
+  custom.style.display = sel === 'custom' ? 'block' : 'none';
+}
+
+function registerStudent() {
+  const name = document.getElementById('reg-name').value.trim();
+  const school = document.getElementById('reg-school').value.trim();
+  const grade = document.getElementById('reg-grade').value;
+  const cls = document.getElementById('reg-class').value;
+  const days = document.getElementById('reg-days').value.trim();
+  const baseSel = document.getElementById('reg-base').value;
+  const baseCustom = parseInt(document.getElementById('reg-base-custom').value) || 0;
+  const base = baseSel === 'custom' ? baseCustom : parseInt(baseSel) || 0;
+  const sibling = parseInt(document.getElementById('reg-sibling').value) || 0;
+  const friend = parseInt(document.getElementById('reg-friend').value) || 0;
+  const note = document.getElementById('reg-note').value.trim();
+  const regDate = document.getElementById('reg-date').value;
+
+  if (!name || !school || !grade || !cls || !days || !base) {
+    showToast('⚠️ 필수 항목을 모두 입력해주세요 (*)');
+    return;
+  }
+
+  const newNo = Math.max(...students.map(s => s.no), 0) + 1;
+  const discountType = sibling > 0 ? '형제' : friend > 0 ? '친구소개' : '';
+  const discount = sibling > 0 ? sibling : friend > 0 ? 10000 : 0;
+
+  students.push({
+    no: newNo, name, school, grade, class_: cls, days,
+    base, discount, discountType, sibling, friend: friend > 0 ? 10000 : 0,
+    final: base - discount, note, regDate, withdrawn: false
+  });
+
+  saveStudents();
+  refreshAllSelects();
+  renderStudentsTable();
+  closeRegisterModal();
+  showToast(`✅ ${name} 학생이 등록되었습니다!`);
+}
+
+// 퇴원 처리
+let _withdrawTargetNo = null;
+function openWithdrawModal(no) {
+  const s = students.find(st => st.no === no);
+  if (!s) return;
+  _withdrawTargetNo = no;
+  document.getElementById('withdraw-desc').innerHTML = `<strong style="color:var(--text)">${s.name}</strong> 학생 (${s.grade} · ${s.class_})을 퇴원 처리하시겠습니까?<br><span style="color:var(--red);font-size:12px">퇴원 후에도 기록은 보존되며 재등록이 가능합니다.</span>`;
+  document.getElementById('withdraw-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('withdraw-reason').value = '';
+  document.getElementById('withdrawModal').classList.remove('hidden');
+}
+function closeWithdrawModal() { document.getElementById('withdrawModal').classList.add('hidden'); _withdrawTargetNo = null; }
+
+function confirmWithdraw() {
+  if (_withdrawTargetNo === null) return;
+  const s = students.find(st => st.no === _withdrawTargetNo);
+  if (!s) return;
+  s.withdrawn = true;
+  s.withdrawDate = document.getElementById('withdraw-date').value;
+  s.withdrawReason = document.getElementById('withdraw-reason').value;
+  saveStudents();
+  refreshAllSelects();
+  renderStudentsTable();
+  closeWithdrawModal();
+  showToast(`🚪 ${s.name} 학생이 퇴원 처리되었습니다.`);
+}
+
+function reEnroll(no) {
+  const s = students.find(st => st.no === no);
+  if (!s) return;
+  if (!confirm(`${s.name} 학생을 재등록 처리하시겠습니까?`)) return;
+  s.withdrawn = false;
+  s.withdrawDate = '';
+  s.withdrawReason = '';
+  saveStudents();
+  refreshAllSelects();
+  renderStudentsTable();
+  showToast(`✅ ${s.name} 학생이 재등록되었습니다!`);
+}
+
+function refreshAllSelects() {
+  const selIds = ['fb-student','pt-student','pc-student','w-student'];
+  const activeStudents = students.filter(s => !s.withdrawn);
+  selIds.forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">-- 학생 선택 --</option>';
+    activeStudents.forEach(s => {
+      const o = document.createElement('option');
+      o.value = s.no;
+      o.textContent = `${s.name} (${s.grade} · ${s.class_})`;
+      sel.appendChild(o);
+    });
+    sel.value = cur;
+  });
+}
+
+// ===================== HISTORY (수업 기록) =====================
+function saveHistory(date, results) {
+  try {
+    let hist = JSON.parse(localStorage.getItem('luche_history') || '[]');
+    results.forEach(r => hist.unshift({ date, name: r.name, message: r.message, savedAt: new Date().toISOString() }));
+    hist = hist.slice(0, 500);
+    localStorage.setItem('luche_history', JSON.stringify(hist));
+  } catch(e) {}
+}
+
+function renderHistory(filter = '') {
+  const area = document.getElementById('historyArea');
+  if (!area) return;
+  let hist = [];
+  try { hist = JSON.parse(localStorage.getItem('luche_history') || '[]'); } catch(e) {}
+  const filtered = filter ? hist.filter(h => h.name.includes(filter) || h.message.includes(filter) || h.date.includes(filter)) : hist;
+
+  if (filtered.length === 0) {
+    area.innerHTML = `<div style="text-align:center;padding:40px;color:var(--muted)"><div style="font-size:40px;margin-bottom:12px">📂</div><p>저장된 기록이 없습니다.<br>수업메모 피드백 탭에서 문자를 생성하면 자동으로 기록됩니다.</p></div>`;
+    return;
+  }
+
+  let html = `<table class="history-table"><thead><tr><th>날짜</th><th>학생</th><th>문자 내용</th></tr></thead><tbody>`;
+  filtered.forEach(h => {
+    const preview = h.message.replace(/\n/g,' ').slice(0, 70) + (h.message.length > 70 ? '...' : '');
+    html += `<tr>
+      <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);white-space:nowrap">${h.date}</td>
+      <td><span class="tag tag-blue">${h.name}</span></td>
+      <td style="color:var(--muted);font-size:13px">${preview}</td>
+    </tr>`;
+  });
+  html += `</tbody></table><div style="margin-top:12px;text-align:right;font-size:12px;color:var(--muted)">총 ${filtered.length}건</div>`;
+  area.innerHTML = html;
+}
+
+function filterHistory() {
+  renderHistory(document.getElementById('searchInput').value.trim());
+}
+
+function clearHistory() {
+  if (confirm('모든 수업 기록을 삭제하시겠습니까?')) {
+    localStorage.removeItem('luche_history');
+    renderHistory();
+    showToast('기록이 삭제되었습니다.');
+  }
+}
+
+function exportExcel() {
+  let hist = [];
+  try { hist = JSON.parse(localStorage.getItem('luche_history') || '[]'); } catch(e) {}
+  if (hist.length === 0) { showToast('저장된 기록이 없습니다.'); return; }
+  const wsData = [['날짜','학생 이름','문자 내용','저장 시각'], ...hist.map(h => [h.date, h.name, h.message, (h.savedAt||'').replace('T',' ').slice(0,16)])];
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+  ws['!cols'] = [{wch:12},{wch:10},{wch:70},{wch:18}];
+  XLSX.utils.book_append_sheet(wb, ws, '수업기록');
+  XLSX.writeFile(wb, `루체수학_수업기록_${new Date().toISOString().slice(0,10)}.xlsx`);
+  showToast('엑셀 파일 다운로드 완료!');
+}
+
+init();
+</script>
+</body>
+</html>
