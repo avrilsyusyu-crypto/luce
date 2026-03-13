@@ -166,22 +166,6 @@
     .nav-btn { padding: 5px 8px; font-size: 12px; }
     .header { height: auto; padding: 10px 16px; gap: 8px; }
   }
-
-  /* API Key Modal */
-  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(6px); }
-  .modal-overlay.hidden { display: none; }
-  .modal-box { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 32px; width: 100%; max-width: 480px; box-shadow: 0 24px 64px rgba(0,0,0,0.7); }
-  .modal-title { font-size: 20px; font-weight: 700; margin-bottom: 10px; }
-  .modal-desc { font-size: 13px; color: var(--muted); line-height: 1.8; margin-bottom: 20px; }
-  .modal-desc a { color: var(--accent); text-decoration: none; }
-  .api-key-input { font-family: 'DM Mono', monospace; font-size: 13px; }
-  .api-status { font-size: 12px; margin-top: 8px; min-height: 18px; }
-  .api-status.ok { color: var(--green); }
-  .api-status.err { color: var(--red); }
-  .api-indicator { margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); cursor: pointer; padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border); transition: all 0.2s; white-space: nowrap; }
-  .api-indicator:hover { border-color: var(--accent); color: var(--accent); }
-  .api-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--red); flex-shrink: 0; }
-  .api-dot.on { background: var(--green); }
 </style>
 </head>
 <body>
@@ -441,6 +425,40 @@
   </div>
 </div>
 
+    <div class="modal-desc" id="withdraw-desc"></div>
+    <div class="mt12 field"><label>퇴원일</label><input type="date" id="withdraw-date"></div>
+    <div class="mt12 field"><label>퇴원 사유 (선택)</label>
+      <select id="withdraw-reason">
+        <option value="">-- 선택 --</option>
+        <option>이사</option><option>타 학원 이동</option><option>개인 사정</option><option>졸업</option><option>기타</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px;">
+      <button class="btn btn-red" style="flex:1;background:var(--red);color:#fff;" onclick="confirmWithdraw()">퇴원 처리</button>
+      <button class="btn btn-secondary" onclick="closeWithdrawModal()">취소</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ TAB: 수업 기록 ============ -->
+<div id="tab-history" class="tab">
+  <div class="section-label">📋 수업 기록</div>
+  <div class="card">
+    <div class="flex" style="flex-wrap:wrap;gap:10px;align-items:center;">
+      <input type="text" id="searchInput" placeholder="🔍 학생 이름 또는 내용 검색..." oninput="filterHistory()" style="max-width:300px;">
+      <button class="btn btn-green btn-sm" onclick="exportExcel()">📊 엑셀 다운로드</button>
+      <button class="btn btn-secondary btn-sm" onclick="clearHistory()">🗑 기록 삭제</button>
+    </div>
+  </div>
+  <div class="card" id="historyArea">
+    <div style="text-align:center;padding:40px;color:var(--muted)">
+      <div style="font-size:40px;margin-bottom:12px">📂</div>
+      <p>저장된 기록이 없습니다.<br>수업메모 피드백 탭에서 문자를 생성하면 자동으로 기록됩니다.</p>
+    </div>
+  </div>
+</div>
+
+</div><!-- end .main -->
 <!-- 신규 등록 모달 -->
 <div class="modal-overlay hidden" id="registerModal">
   <div class="modal-box" style="max-width:560px;max-height:90vh;overflow-y:auto;">
@@ -507,60 +525,7 @@
 <div class="modal-overlay hidden" id="withdrawModal">
   <div class="modal-box" style="max-width:400px;">
     <div class="modal-title">🚪 퇴원 처리</div>
-    <div class="modal-desc" id="withdraw-desc"></div>
-    <div class="mt12 field"><label>퇴원일</label><input type="date" id="withdraw-date"></div>
-    <div class="mt12 field"><label>퇴원 사유 (선택)</label>
-      <select id="withdraw-reason">
-        <option value="">-- 선택 --</option>
-        <option>이사</option><option>타 학원 이동</option><option>개인 사정</option><option>졸업</option><option>기타</option>
-      </select>
-    </div>
-    <div style="display:flex;gap:10px;margin-top:20px;">
-      <button class="btn btn-red" style="flex:1;background:var(--red);color:#fff;" onclick="confirmWithdraw()">퇴원 처리</button>
-      <button class="btn btn-secondary" onclick="closeWithdrawModal()">취소</button>
-    </div>
-  </div>
-</div>
 
-<!-- ============ TAB: 수업 기록 ============ -->
-<div id="tab-history" class="tab">
-  <div class="section-label">📋 수업 기록</div>
-  <div class="card">
-    <div class="flex" style="flex-wrap:wrap;gap:10px;align-items:center;">
-      <input type="text" id="searchInput" placeholder="🔍 학생 이름 또는 내용 검색..." oninput="filterHistory()" style="max-width:300px;">
-      <button class="btn btn-green btn-sm" onclick="exportExcel()">📊 엑셀 다운로드</button>
-      <button class="btn btn-secondary btn-sm" onclick="clearHistory()">🗑 기록 삭제</button>
-    </div>
-  </div>
-  <div class="card" id="historyArea">
-    <div style="text-align:center;padding:40px;color:var(--muted)">
-      <div style="font-size:40px;margin-bottom:12px">📂</div>
-      <p>저장된 기록이 없습니다.<br>수업메모 피드백 탭에서 문자를 생성하면 자동으로 기록됩니다.</p>
-    </div>
-  </div>
-</div>
-
-</div><!-- end .main -->
-
-
-    <div class="modal-desc">
-      AI 기능을 사용하려면 Anthropic API 키가 필요합니다.<br>
-      키는 브라우저에 안전하게 저장되며 외부로 전송되지 않습니다.<br><br>
-      API 키 발급: <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a><br>
-      (무료 크레딧으로 시작 가능)
-    </div>
-    <label style="font-size:12px;color:var(--muted);margin-bottom:6px;display:block;font-weight:600">API 키 입력</label>
-    <input type="password" class="api-key-input" id="apiKeyInput" placeholder="sk-ant-api03-..." autocomplete="off">
-    <div class="api-status" id="apiStatusMsg"></div>
-    <div style="display:flex;gap:10px;margin-top:20px;">
-      <button class="btn btn-primary" style="flex:1" onclick="saveApiKey()">저장하고 시작하기</button>
-      <button class="btn btn-secondary" onclick="closeApiModal()">닫기</button>
-    </div>
-    <div style="margin-top:12px;font-size:11px;color:var(--muted);text-align:center">
-      저장된 키는 이 브라우저에서만 유지됩니다
-    </div>
-  </div>
-</div>
 
 <div class="toast" id="toast"></div>
 
@@ -651,7 +616,6 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2200);
 }
 
-// ===================== CLAUDE API (removed) =====================
 
 function copyText(id) {
   const box = document.getElementById(id);
