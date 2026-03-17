@@ -2988,7 +2988,7 @@ function buildFbMsg(item) {
   var NL = '\n';
   var lines = item.content.split(NL).map(function(l) { return cleanText(l.trim()); }).filter(Boolean);
   // 과제안내 줄을 맨 앞에
-  var hw = '▶ 과제 안내입니다.';
+  var hw = '▶ 과제 안내 입니다.';
   // 이미 ▶ 형식이면 정리만
   if (lines.some(function(l) { return l.charAt(0) === '▶'; })) {
     var cleaned = lines.map(function(l) { return cleanText(l); }).filter(Boolean);
@@ -3050,7 +3050,7 @@ function generateManualFb() {
   if (!content) { toast('⚠️ 수업 내용을 입력해주세요'); return; }
 
   var parts = [];
-  parts.push('▶ 과제 안내입니다.');
+  parts.push('▶ 과제 안내 입니다.');
   parts.push('▶ ' + s.name + '이는 오늘 ' + content);
   if (next) parts.push('▶ ' + next);
   var msg = parts.join(NL);
