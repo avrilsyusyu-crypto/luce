@@ -2497,12 +2497,51 @@ function getWonbiRecord(mo, sid) {
   return d[mo][sid];
 }
 
+
+// ─── 납부 이력 관리 ───────────────────────────────────────
+function loadPayHistory() {
+  try { return JSON.parse(localStorage.getItem('luche_pay_hist_v1') || '{}'); } catch(e) { return {}; }
+}
+function savePayHistory(d) { localStorage.setItem('luche_pay_hist_v1', JSON.stringify(d)); }
+
+function recordPayment(mo, sid, amount, paid) {
+  var h = loadPayHistory();
+  if (!h[sid]) h[sid] = [];
+  var today = new Date().toISOString().split('T')[0];
+  if (paid) {
+    // 납부 기록 추가 (같은 월 중복 방지)
+    var exists = h[sid].find(function(r){ return r.mo === mo; });
+    if (exists) {
+      exists.paidDate = today;
+      exists.amount   = amount;
+    } else {
+      h[sid].push({ mo: mo, paidDate: today, amount: amount, id: Date.now() });
+    }
+  } else {
+    // 납부 취소 — 해당 월 기록 제거
+    h[sid] = h[sid].filter(function(r){ return r.mo !== mo; });
+  }
+  savePayHistory(h);
+}
+
+function getPayHistory(sid) {
+  var h = loadPayHistory();
+  return (h[sid] || []).sort(function(a,b){ return b.mo.localeCompare(a.mo); });
+}
+
 function setWonbiField(mo, sid, field, val) {
   const d = loadWonbiData();
   if (!d[mo]) d[mo] = {};
   if (!d[mo][sid]) d[mo][sid] = {absent:0, earlyLeave:0, textbook:0, memo:'', paid:false, absentNote:''};
   d[mo][sid][field] = val;
   saveWonbiData(d);
+  // 납부 상태 변경 시 이력 기록
+  if (field === 'paid') {
+    var s   = students.find(function(st){ return st.id === sid; });
+    var rec = d[mo][sid];
+    var amt = calcTotal(s, rec);
+    recordPayment(mo, sid, amt, val);
+  }
   renderWonbiRow(mo, sid);
   renderWonbiSummary();
 }
@@ -2655,8 +2694,9 @@ function renderWonbi() {
       <td>
         <span id="wb-paid-${s.id}" class="${rec.paid?'wb-paid':'wb-unpaid'}"
           style="cursor:pointer;font-size:12px;padding:3px 8px;border-radius:6px;border:1px solid ${rec.paid?'rgba(62,207,142,0.4)':'rgba(247,95,95,0.3)'};background:${rec.paid?'rgba(62,207,142,0.1)':'rgba(247,95,95,0.08)'};"
-          onclick="setWonbiField('${mo}',${s.id},'paid',!${rec.paid})">
-          ${rec.paid ? '✅ 납부' : '미납'}
+          onclick="setWonbiField('${mo}',${s.id},'paid',!${rec.paid})"
+          title="${rec.paid ? (() => { var h=getPayHistory(s.id).find(r=>r.mo===mo); return h?h.paidDate+' 납부':'납부완료'; })() : '클릭하여 납부 처리'}">
+          ${rec.paid ? '✅ ' + (() => { var h=getPayHistory(s.id).find(r=>r.mo===mo); return h?h.paidDate:'납부'; })() : '미납'}
         </span>
       </td>
       <td>
@@ -3832,6 +3872,18 @@ function exportSummary() {
   downloadXlsx(wb, getExportFilename()+'_'+moLabel+'_종합요약');
 }
 
+function buildPayHistSheet() {
+  var rows = [['이름','학년','반','납부월','납부일','납부금액']];
+  var h = loadPayHistory();
+  students.forEach(function(s) {
+    var recs = (h[s.id] || []).sort(function(a,b){ return b.mo.localeCompare(a.mo); });
+    recs.forEach(function(r) {
+      rows.push([s.name, s.grade, s.cls, r.mo.replace('-','년 ')+'월', r.paidDate, r.amount||0]);
+    });
+  });
+  return rows;
+}
+
 function exportAll() {
   var mo = getExportMonth();
   var moLabel = mo.replace('-','년 ')+'월';
@@ -3840,6 +3892,7 @@ function exportAll() {
   XLSX.utils.book_append_sheet(wb, makeWs(buildWonbiSheet(mo)),    moLabel+'_원비납부');
   XLSX.utils.book_append_sheet(wb, makeWs(buildAttSheet(mo)),      moLabel+'_출결');
   XLSX.utils.book_append_sheet(wb, makeWs(buildSummarySheet(mo)),  moLabel+'_종합요약');
+  XLSX.utils.book_append_sheet(wb, makeWs(buildPayHistSheet()),    '납부이력_전체');
   downloadXlsx(wb, getExportFilename()+'_'+moLabel+'_전체');
 }
 
