@@ -2567,19 +2567,46 @@ function syncAttToWonbi() {
   const d      = loadWonbiData();
   if (!d[mo]) d[mo] = {};
 
+  // 보충 예정 날짜 → origDate 역인덱스 만들기
+  // ms[보충날짜][sid] = {origDate} → origDate별로 보충예정인 sid 집합
+  const ms = loadMakeupSchedule();
+  const makeupOrigins = {}; // {sid: Set of origDate(ymd)}
+  Object.keys(ms).forEach(makeupYmd => {
+    Object.keys(ms[makeupYmd]).forEach(sid => {
+      const orig = ms[makeupYmd][sid]?.origDate;
+      if (!orig) return;
+      if (!makeupOrigins[sid]) makeupOrigins[sid] = new Set();
+      makeupOrigins[sid].add(orig);
+    });
+  });
+
   students.filter(s => !s.withdrawn).forEach(s => {
     if (!d[mo][s.id]) d[mo][s.id] = {absent:0, earlyLeave:0, textbook:0, memo:'', paid:false, absentNote:''};
-    let absentCount = 0, earlyCount = 0, absentDates = [];
+    let absentCount = 0, earlyCount = 0, absentDates = [], pendingDates = [];
+    const sidOrigins = makeupOrigins[s.id] || new Set();
+
     Object.keys(att).forEach(ymd => {
-      if (!ymd.startsWith(prevMo)) return;  // 전달 데이터만
+      if (!ymd.startsWith(prevMo)) return;
       if (isSchoolClosed(ymd)) return;
       const st = att[ymd]?.[s.id];
-      if (st === 'absent') { absentCount++; absentDates.push(ymd.slice(5).replace('-','/')); }
-      if (st === 'early')  { earlyCount++; }
+      if (st === 'absent') {
+        // 보충 예정이 잡혀 있으면 차감 제외
+        if (sidOrigins.has(ymd)) {
+          pendingDates.push(ymd.slice(5).replace('-','/') + '(보충예정)');
+        } else {
+          absentCount++;
+          absentDates.push(ymd.slice(5).replace('-','/'));
+        }
+      }
+      if (st === 'early') { earlyCount++; }
     });
+
     d[mo][s.id].absent     = absentCount;
     d[mo][s.id].earlyLeave = earlyCount;
-    d[mo][s.id].absentNote = absentDates.length > 0 ? absentDates.join(', ') + ' 결석' : '';
+    const noteArr = [];
+    if (absentDates.length > 0)  noteArr.push(absentDates.join(', ') + ' 결석');
+    if (pendingDates.length > 0) noteArr.push(pendingDates.join(', '));
+    d[mo][s.id].absentNote = noteArr.join(' / ');
   });
 
   saveWonbiData(d);
