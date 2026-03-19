@@ -507,7 +507,7 @@ input::placeholder { color: var(--muted); }
 
       <!-- 출결 탭 연동 안내 -->
       <div style="margin-top:12px;padding:10px 14px;background:rgba(79,142,247,0.08);border:1px solid rgba(79,142,247,0.2);border-radius:8px;font-size:12px;color:var(--muted);line-height:1.8;">
-        💡 <strong style="color:var(--accent)">📥 출결 불러오기</strong> 버튼으로 출결 탭 데이터를 자동 반영해요.<br>
+        💡 <strong style="color:var(--accent)">📥 출결 불러오기</strong> 버튼으로 <strong>전달 출결</strong> 데이터를 자동 반영해요. (예: 4월 원비 → 3월 출결 기준)<br>
         &nbsp;&nbsp;&nbsp;&nbsp;
         <span style="color:var(--red)">결석</span> → 1회 차감 &nbsp;·&nbsp;
         <span style="color:var(--accent)">보충</span> → 차감 없음 &nbsp;·&nbsp;
@@ -2550,25 +2550,33 @@ function setWonbiField(mo, sid, field, val) {
 }
 
 // 출결 탭 → 원비 자동 연동
+// 청구월의 전달 계산
+function getPrevMonth(mo) {
+  const [y, m] = mo.split('-').map(Number);
+  const prev = m === 1 ? `${y-1}-12` : `${y}-${String(m-1).padStart(2,'0')}`;
+  return prev;
+}
+
 function syncAttToWonbi() {
-  const mo = getWonbiKey();
+  const mo     = getWonbiKey();
   if (!mo) { toast('⚠️ 청구 월을 먼저 선택해주세요'); return; }
-  const att = loadAttendance();
-  const d   = loadWonbiData();
+
+  // 청구월의 전달 출결 데이터 사용
+  const prevMo = getPrevMonth(mo);
+  const att    = loadAttendance();
+  const d      = loadWonbiData();
   if (!d[mo]) d[mo] = {};
 
   students.filter(s => !s.withdrawn).forEach(s => {
     if (!d[mo][s.id]) d[mo][s.id] = {absent:0, earlyLeave:0, textbook:0, memo:'', paid:false, absentNote:''};
     let absentCount = 0, earlyCount = 0, absentDates = [];
     Object.keys(att).forEach(ymd => {
-      if (!ymd.startsWith(mo)) return;
-      if (isSchoolClosed(ymd)) return; // 공휴일·학원휴무 → 결석 카운트 제외
+      if (!ymd.startsWith(prevMo)) return;  // 전달 데이터만
+      if (isSchoolClosed(ymd)) return;
       const st = att[ymd]?.[s.id];
       if (st === 'absent') { absentCount++; absentDates.push(ymd.slice(5).replace('-','/')); }
-      // extend(연장보충)은 결석 차감 없음
       if (st === 'early')  { earlyCount++; }
     });
-    // 납부 여부·교재비·메모는 유지, 출결만 덮어씀
     d[mo][s.id].absent     = absentCount;
     d[mo][s.id].earlyLeave = earlyCount;
     d[mo][s.id].absentNote = absentDates.length > 0 ? absentDates.join(', ') + ' 결석' : '';
@@ -2576,7 +2584,7 @@ function syncAttToWonbi() {
 
   saveWonbiData(d);
   renderWonbi();
-  toast(`✅ 출결 데이터 반영 완료 (${mo})`);
+  toast(`✅ ${prevMo} 출결 → ${mo} 원비 반영 완료`);
 }
 
 // 반별 기준 회차
