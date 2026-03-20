@@ -2107,12 +2107,18 @@ function clearAllAtt() {
 function setAtt(ymd, sid, status) {
   const att = loadAttendance();
   if (!att[ymd]) att[ymd] = {};
-  const prev = att[ymd][sid];
-  att[ymd][sid] = status;
+  const prev = att[ymd][sid] || 'none';
+  // 같은 버튼 다시 누르면 취소(미정)
+  const next = (prev === status) ? 'none' : status;
+  if (next === 'none') {
+    delete att[ymd][sid];
+  } else {
+    att[ymd][sid] = next;
+  }
   saveAttendance(att);
   renderAttendance();
-  // 결석으로 바뀌면 바로 보충 날짜 지정 물어보기
-  if (status === 'absent' && prev !== 'absent') {
+  // 결석으로 바뀌면 보충 날짜 지정
+  if (next === 'absent' && prev !== 'absent') {
     setTimeout(() => openMakeupModal(ymd, sid), 150);
   }
 }
