@@ -81,6 +81,7 @@ input::placeholder { color: var(--muted); }
 .stat-filter { transition: all 0.2s; }
 .stat-filter:hover { border-color: var(--accent); transform: translateY(-2px); }
 .monthly-filter-btn.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+.ov-toggle.active { background:var(--accent); color:#fff; border-color:var(--accent); }
 .stat-filter.active { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(79,142,247,0.25); }
 
 /* Tags */
@@ -767,7 +768,8 @@ input::placeholder { color: var(--muted); }
     <!-- 서브탭 + 학생 선택 한 줄 -->
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid var(--border);">
       <div style="display:flex;gap:4px;">
-        <button class="tab-btn active" id="gtab-btn-elem"  onclick="switchGradeTab('elem',this)"  style="font-size:13px;padding:8px 16px;">🏅 초등 경시대회</button>
+        <button class="tab-btn active" id="gtab-btn-overview" onclick="switchGradeTab('overview',this)" style="font-size:13px;padding:8px 16px;">📊 전체 현황</button>
+        <button class="tab-btn"        id="gtab-btn-elem"  onclick="switchGradeTab('elem',this)"  style="font-size:13px;padding:8px 16px;">🏅 초등 경시대회</button>
         <button class="tab-btn"        id="gtab-btn-mid"   onclick="switchGradeTab('mid',this)"   style="font-size:13px;padding:8px 16px;">📝 중등 내신</button>
         <button class="tab-btn"        id="gtab-btn-high"  onclick="switchGradeTab('high',this)"  style="font-size:13px;padding:8px 16px;">📝 고등 내신</button>
       </div>
@@ -780,8 +782,61 @@ input::placeholder { color: var(--muted); }
       </div>
     </div>
 
+
+    <!-- ── 전체 현황 서브탭 ── -->
+    <div id="gtab-overview" class="grade-subtab">
+
+      <!-- 초등 경시대회 순위 -->
+      <div class="card" style="margin-bottom:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+          <div class="card-title" style="margin-bottom:0;"><span class="dot" style="background:var(--yellow)"></span> 🏅 초등 경시대회 순위</div>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-ghost btn-sm ov-toggle active" id="ov-elem-avg-btn"  onclick="setOvMode('elem','avg',this)"  style="font-size:11px;">평균점수</button>
+            <button class="btn btn-ghost btn-sm ov-toggle"        id="ov-elem-last-btn" onclick="setOvMode('elem','last',this)" style="font-size:11px;">최근점수</button>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div id="ov-elem-rank" style="max-height:300px;overflow-y:auto;"></div>
+          <div style="height:260px;"><canvas id="ov-elem-chart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- 중등 내신 순위 -->
+      <div class="card" style="margin-bottom:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+          <div class="card-title" style="margin-bottom:0;"><span class="dot" style="background:var(--accent)"></span> 📝 중등 내신 순위</div>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-ghost btn-sm ov-toggle active" id="ov-mid-avg-btn"   onclick="setOvMode('mid','avg',this)"   style="font-size:11px;">평균점수</button>
+            <button class="btn btn-ghost btn-sm ov-toggle"        id="ov-mid-last-btn"  onclick="setOvMode('mid','last',this)"  style="font-size:11px;">최근점수</button>
+            <button class="btn btn-ghost btn-sm ov-toggle"        id="ov-mid-mock-btn"  onclick="setOvMode('mid','mock',this)"  style="font-size:11px;">모의고사</button>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div id="ov-mid-rank" style="max-height:300px;overflow-y:auto;"></div>
+          <div style="height:260px;"><canvas id="ov-mid-chart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- 고등 내신 순위 -->
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+          <div class="card-title" style="margin-bottom:0;"><span class="dot" style="background:var(--purple)"></span> 📝 고등 내신 순위</div>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-ghost btn-sm ov-toggle active" id="ov-high-avg-btn"  onclick="setOvMode('high','avg',this)"  style="font-size:11px;">평균점수</button>
+            <button class="btn btn-ghost btn-sm ov-toggle"        id="ov-high-last-btn" onclick="setOvMode('high','last',this)" style="font-size:11px;">최근점수</button>
+            <button class="btn btn-ghost btn-sm ov-toggle"        id="ov-high-mock-btn" onclick="setOvMode('high','mock',this)" style="font-size:11px;">모의고사</button>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div id="ov-high-rank" style="max-height:300px;overflow-y:auto;"></div>
+          <div style="height:260px;"><canvas id="ov-high-chart"></canvas></div>
+        </div>
+      </div>
+
+    </div>
+
     <!-- ── 초등 경시대회 ── -->
-    <div id="gtab-elem" class="grade-subtab">
+    <div id="gtab-elem" class="grade-subtab" style="display:none;">
       <!-- 상단: 입력폼 + 기록목록 -->
       <div style="display:grid;grid-template-columns:300px 1fr;gap:16px;margin-bottom:16px;">
 
@@ -3553,6 +3608,223 @@ function drawMockStandaloneChart(sid, records) {
   });
 }
 
+
+// ─── 성적 전체 현황 ────────────────────────────────────────
+var ovMode = { elem:'avg', mid:'avg', high:'avg' };
+
+function setOvMode(group, mode, btn) {
+  ovMode[group] = mode;
+  // 해당 그룹 토글버튼 active
+  document.querySelectorAll('#ov-'+group+'-avg-btn, #ov-'+group+'-last-btn, #ov-'+group+'-mock-btn').forEach(function(b) {
+    b.classList.remove('active');
+  });
+  btn.classList.add('active');
+  renderGradeOverview();
+}
+
+function renderGradeOverview() {
+  var gd   = loadGradeData();
+  var TLBL = {'1-mid':'1학기중간','1-final':'1학기기말','2-mid':'2학기중간','2-final':'2학기기말'};
+
+  // 공통 점수 추출 헬퍼
+  function getExamScore(recs, mode) {
+    if (!recs || recs.length === 0) return null;
+    var scored = recs.filter(function(r){ return r.math !== null; });
+    if (scored.length === 0) return null;
+    if (mode === 'last') return scored[scored.length-1].math;
+    return Math.round(scored.reduce(function(a,r){ return a+r.math; },0)/scored.length*10)/10;
+  }
+  function getExamDetail(recs, mode) {
+    if (!recs || recs.length === 0) return '기록 없음';
+    var scored = recs.filter(function(r){ return r.math !== null; });
+    if (scored.length === 0) return '기록 없음';
+    var r = mode === 'last' ? scored[scored.length-1] : null;
+    if (r) return r.year+'년 '+(TLBL[r.term]||r.term)+' '+r.math+'점'+(r.gradeVal?' '+r.gradeVal+'등급':'');
+    var avg = Math.round(scored.reduce(function(a,v){ return a+v.math; },0)/scored.length*10)/10;
+    return scored.length+'회 평균 '+avg+'점';
+  }
+  function getMockScore(sid) {
+    var recs = (gd['mock_standalone'] && gd['mock_standalone'][sid]) ? gd['mock_standalone'][sid] : [];
+    if (recs.length === 0) return null;
+    return Math.round(recs.reduce(function(a,r){ return a+r.score; },0)/recs.length*10)/10;
+  }
+  function getMockDetail(sid) {
+    var recs = (gd['mock_standalone'] && gd['mock_standalone'][sid]) ? gd['mock_standalone'][sid] : [];
+    if (recs.length === 0) return '기록 없음';
+    var avg = Math.round(recs.reduce(function(a,r){ return a+r.score; },0)/recs.length*10)/10;
+    var last = recs[recs.length-1];
+    return recs.length+'회 평균 '+avg+'점 / 최근 '+last.score+'점';
+  }
+
+  // ── 초등: 경시대회
+  var elemMode = ovMode['elem'] || 'avg';
+  renderOverviewSection({
+    students:  students.filter(function(s){ return !s.withdrawn && s.grade.startsWith('초'); }),
+    getScore:  function(s) {
+      var recs = (gd['comp'] && gd['comp'][s.id]) ? gd['comp'][s.id] : [];
+      var scored = recs.filter(function(r){ return r.score !== null; });
+      if (scored.length === 0) return null;
+      if (elemMode === 'last') return scored[scored.length-1].score;
+      return Math.round(scored.reduce(function(a,r){ return a+r.score; },0)/scored.length*10)/10;
+    },
+    getDetail: function(s) {
+      var recs = (gd['comp'] && gd['comp'][s.id]) ? gd['comp'][s.id] : [];
+      if (recs.length === 0) return '기록 없음';
+      var scored = recs.filter(function(r){ return r.score !== null; });
+      if (elemMode === 'last' && scored.length > 0) {
+        var r = scored[scored.length-1];
+        return r.name + ' ' + (r.award||'') + ' ' + r.score + '점';
+      }
+      var avg = scored.length > 0 ? Math.round(scored.reduce(function(a,r){return a+r.score;},0)/scored.length*10)/10 : null;
+      var last = recs[recs.length-1];
+      return (last.award||'참가') + (avg?' 평균'+avg+'점':'');
+    },
+    rankElId:  'ov-elem-rank',
+    chartElId: 'ov-elem-chart',
+    chartKey:  'ov-elem',
+    color:     'rgba(196,154,0,0.8)',
+    label:     elemMode==='last'?'최근점수':'평균점수',
+    max:       100,
+    mode:      elemMode
+  });
+
+  // ── 중등: 내신 / 모의고사
+  var midMode = ovMode['mid'] || 'avg';
+  renderOverviewSection({
+    students:  students.filter(function(s){ return !s.withdrawn && s.grade.startsWith('중'); }),
+    getScore:  function(s) {
+      if (midMode === 'mock') return getMockScore(s.id);
+      return getExamScore(gd['mid'] && gd['mid'][s.id], midMode);
+    },
+    getDetail: function(s) {
+      if (midMode === 'mock') return getMockDetail(s.id);
+      return getExamDetail(gd['mid'] && gd['mid'][s.id], midMode);
+    },
+    rankElId:  'ov-mid-rank',
+    chartElId: 'ov-mid-chart',
+    chartKey:  'ov-mid',
+    color:     midMode==='mock'?'rgba(98,64,212,0.8)':'rgba(46,111,218,0.8)',
+    label:     midMode==='mock'?'모의고사평균':midMode==='last'?'최근점수':'평균점수',
+    max:       100,
+    mode:      midMode
+  });
+
+  // ── 고등: 내신 / 모의고사
+  var highMode = ovMode['high'] || 'avg';
+  renderOverviewSection({
+    students:  students.filter(function(s){ return !s.withdrawn && s.grade.startsWith('고'); }),
+    getScore:  function(s) {
+      if (highMode === 'mock') return getMockScore(s.id);
+      return getExamScore(gd['high'] && gd['high'][s.id], highMode);
+    },
+    getDetail: function(s) {
+      if (highMode === 'mock') return getMockDetail(s.id);
+      return getExamDetail(gd['high'] && gd['high'][s.id], highMode);
+    },
+    rankElId:  'ov-high-rank',
+    chartElId: 'ov-high-chart',
+    chartKey:  'ov-high',
+    color:     highMode==='mock'?'rgba(124,92,252,0.8)':'rgba(98,64,212,0.8)',
+    label:     highMode==='mock'?'모의고사평균':highMode==='last'?'최근점수':'평균점수',
+    max:       100,
+    mode:      highMode
+  });
+}
+
+function renderOverviewSection(opt) {
+  // 점수 있는 학생만 순위 산출
+  var scored = [], noData = [];
+  opt.students.forEach(function(s) {
+    var sc = opt.getScore(s);
+    if (sc !== null) scored.push({ s:s, score:sc, detail:opt.getDetail(s) });
+    else             noData.push({ s:s, detail:opt.getDetail(s) });
+  });
+  scored.sort(function(a,b){ return b.score - a.score; });
+
+  // ── 순위 목록
+  var rankEl = document.getElementById(opt.rankElId);
+  if (!rankEl) return;
+
+  if (scored.length === 0 && noData.length === 0) {
+    rankEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px;">재원생 없음</div>';
+  } else {
+    var MEDALS = ['🥇','🥈','🥉'];
+    var html = '';
+    // 점수 있는 학생
+    scored.forEach(function(item, i) {
+      var medal  = MEDALS[i] || '<span style="font-size:12px;color:var(--muted);font-weight:700;min-width:20px;display:inline-block;">'+(i+1)+'위</span>';
+      var barW   = Math.round(item.score / opt.max * 100);
+      var color  = item.score >= 80 ? 'var(--green)' : item.score >= 60 ? 'var(--accent)' : 'var(--red)';
+      html += '<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid var(--border);">' +
+        '<div style="font-size:16px;min-width:28px;text-align:center;">' + medal + '</div>' +
+        '<div style="flex:1;min-width:0;">' +
+          '<div style="display:flex;justify-content:space-between;margin-bottom:3px;">' +
+            '<span style="font-weight:700;font-size:13px;">' + item.s.name + '</span>' +
+            '<span style="font-weight:800;font-size:14px;color:'+color+';">' + item.score + '</span>' +
+          '</div>' +
+          '<div style="background:var(--border);border-radius:4px;height:5px;overflow:hidden;">' +
+            '<div style="width:'+barW+'%;height:100%;background:'+color+';border-radius:4px;transition:width .4s;"></div>' +
+          '</div>' +
+          '<div style="font-size:10px;color:var(--muted);margin-top:2px;">' + item.s.grade + ' · ' + item.detail + '</div>' +
+        '</div>' +
+      '</div>';
+    });
+    // 기록 없는 학생
+    if (noData.length > 0) {
+      html += '<div style="padding:5px 10px;font-size:10px;color:var(--muted);background:var(--surface2);">기록 없음</div>';
+      noData.forEach(function(item) {
+        html += '<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid var(--border);opacity:.5;">' +
+          '<div style="min-width:28px;text-align:center;font-size:12px;color:var(--muted);">—</div>' +
+          '<div style="font-size:12px;font-weight:600;">' + item.s.name + '</div>' +
+          '<div style="font-size:11px;color:var(--muted);">' + item.s.grade + '</div>' +
+        '</div>';
+      });
+    }
+    rankEl.innerHTML = html;
+  }
+
+  // ── 막대+꺾은선 차트
+  var canvas = document.getElementById(opt.chartElId);
+  if (!canvas || scored.length === 0) return;
+  if (gradeCharts[opt.chartKey]) { gradeCharts[opt.chartKey].destroy(); }
+
+  var labels   = scored.map(function(item){ return item.s.name; });
+  var data     = scored.map(function(item){ return item.score; });
+  var barColors= data.map(function(v){ return v>=80?'rgba(26,158,110,0.7)':v>=60?'rgba(46,111,218,0.7)':'rgba(214,59,59,0.6)'; });
+  var avg      = Math.round(data.reduce(function(a,b){return a+b;},0)/data.length*10)/10;
+
+  gradeCharts[opt.chartKey] = new Chart(canvas, {
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          type:'bar', label:opt.label, data:data,
+          backgroundColor:barColors, borderColor:barColors,
+          borderWidth:0, borderRadius:6, order:2
+        },
+        {
+          type:'line', label:'평균 '+avg+'점',
+          data: data.map(function(){ return avg; }),
+          borderColor:'rgba(247,147,79,0.8)', borderWidth:1.5,
+          borderDash:[5,4], pointRadius:0, fill:false, order:1
+        }
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{ mode:'index', intersect:false },
+      plugins:{ legend:{ position:'top', labels:{ boxWidth:10, font:{size:10} }}},
+      scales:{
+        y:{ min:0, max:opt.max,
+          grid:{ color:'rgba(0,0,0,0.05)' },
+          ticks:{ stepSize:20 }
+        },
+        x:{ grid:{ display:false }, ticks:{ font:{size:11} } }
+      }
+    }
+  });
+}
+
 // ─── 모의고사 기록 ────────────────────────────────────────
 function getMockRecords(type, sid) {
   var d = loadGradeData();
@@ -4392,8 +4664,8 @@ function drawExamChart(type, sid, records) {
 
 // 탭 전환 시 초기화
 function initGradeTab() {
-  renderGradeStudentSelect();
-  initGradeSubtab('elem');
+  gradeTab = 'overview';
+  renderGradeOverview();
 }
 
 // ═══════════════════════════════════════════════
