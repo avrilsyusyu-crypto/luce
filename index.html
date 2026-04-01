@@ -300,6 +300,8 @@ input::placeholder { color: var(--muted); }
 </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 </head>
 <body>
 
@@ -324,6 +326,7 @@ input::placeholder { color: var(--muted); }
     <div class="hstat">초등 <strong id="h-elem">0</strong></div>
     <div class="hstat">중등 <strong id="h-mid">0</strong></div>
     <div class="hstat">고등 <strong id="h-high">0</strong></div>
+    <span id="fb-status-badge" style="font-size:11px;color:var(--muted);margin-left:8px;">🔴 연결 중...</span>
     <button onclick="backupData()" style="margin-left:8px;padding:4px 10px;border-radius:6px;border:1px solid rgba(46,111,218,0.3);background:rgba(46,111,218,0.08);color:var(--accent);font-size:11px;font-family:inherit;cursor:pointer;" title="현재 데이터 백업 파일로 저장">💾 백업</button>
     <button onclick="restoreData()" style="padding:4px 10px;border-radius:6px;border:1px solid rgba(26,158,110,0.3);background:rgba(26,158,110,0.08);color:var(--green);font-size:11px;font-family:inherit;cursor:pointer;" title="백업 파일에서 복원">📂 복원</button>
     <button onclick="resetAllData()" style="padding:4px 10px;border-radius:6px;border:1px solid rgba(247,95,95,0.3);background:rgba(247,95,95,0.1);color:var(--red);font-size:11px;font-family:inherit;cursor:pointer;" title="데이터 초기화">🔄 초기화</button>
@@ -1269,6 +1272,97 @@ input::placeholder { color: var(--muted); }
 <div class="toast" id="toast"></div>
 
 <script>
+
+// ═══════════════════════════════════════════════
+// FIREBASE 실시간 동기화
+// ═══════════════════════════════════════════════
+var FB_CONFIG = {
+  apiKey:            "AIzaSyDLwMMEeLnu2efeJTj989qIKidMkrEHaIs",
+  authDomain:        "luce-math-1.firebaseapp.com",
+  databaseURL:       "https://luce-math-1-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:         "luce-math-1",
+  storageBucket:     "luce-math-1.firebasestorage.app",
+  messagingSenderId: "434046906271",
+  appId:             "1:434046906271:web:00c923586ff609068f17aa"
+};
+
+firebase.initializeApp(FB_CONFIG);
+var fbDb = firebase.database();
+
+var SYNC_KEYS = [
+  'luche_students_v2','luche_att_v1','luche_wonbi_v1',
+  'luche_holidays_v1','luche_makeup_v1','luche_fb_tmpl_v1',
+  'luche_grades_v1','luche_pay_hist_v1'
+];
+
+var fbWriteLock = false;
+var fbListeners = {};
+
+// Firebase → localStorage 실시간 수신
+function fbStartListeners() {
+  SYNC_KEYS.forEach(function(key) {
+    fbDb.ref('luche/' + key).on('value', function(snap) {
+      if (fbWriteLock) return;
+      var val = snap.val();
+      if (val !== null) {
+        fbWriteLock = true;
+        localStorage.setItem(key, typeof val === 'string' ? val : JSON.stringify(val));
+        fbWriteLock = false;
+        if (typeof loadData === 'function') { loadData(); renderAll(); }
+      }
+    });
+  });
+}
+
+// localStorage.setItem → Firebase 자동 업로드
+var _origSet = Storage.prototype.setItem;
+Storage.prototype.setItem = function(key, val) {
+  _origSet.call(this, key, val);
+  if (!fbWriteLock && typeof fbDb !== 'undefined' && SYNC_KEYS.indexOf(key) >= 0) {
+    fbDb.ref('luche/' + key).set(val).catch(function(e){ console.warn('FB write:', e); });
+  }
+};
+
+var _origDel = Storage.prototype.removeItem;
+Storage.prototype.removeItem = function(key) {
+  _origDel.call(this, key);
+  if (!fbWriteLock && typeof fbDb !== 'undefined' && SYNC_KEYS.indexOf(key) >= 0) {
+    fbDb.ref('luche/' + key).remove().catch(function(e){ console.warn('FB del:', e); });
+  }
+};
+
+// 연결 상태 뱃지
+fbDb.ref('.info/connected').on('value', function(snap) {
+  var badge = document.getElementById('fb-status-badge');
+  if (badge) {
+    badge.textContent = snap.val() ? '🟢 동기화 중' : '🔴 오프라인';
+    badge.style.color = snap.val() ? 'var(--green)' : 'var(--red)';
+  }
+});
+
+// Firebase 데이터 우선 로드 후 앱 시작
+function fbInitAndLoad() {
+  var loaded = 0; var total = SYNC_KEYS.length;
+  SYNC_KEYS.forEach(function(key) {
+    fbDb.ref('luche/' + key).once('value', function(snap) {
+      var val = snap.val();
+      if (val !== null) {
+        fbWriteLock = true;
+        _origSet.call(localStorage, key, typeof val === 'string' ? val : JSON.stringify(val));
+        fbWriteLock = false;
+      }
+      if (++loaded === total) {
+        fbStartListeners();
+        loadData(); renderAll(); setAttToday();
+        updateAttDateBadge(); initWonbi(); setMonthlyToday();
+        (function(){ var now=new Date(); var el=document.getElementById('export-month');
+          if(el) el.value=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0'); })();
+        if (checkLoginState()) showApp();
+      }
+    });
+  });
+}
+
 
 // ═══════════════════════════════════════════════
 // DATA
@@ -4773,7 +4867,8 @@ function doReset() {
   location.reload();
 }
 
-// INIT
+// INIT — Firebase 초기화 후 앱 시작
+fbInitAndLoad();
 
 // ── 엑셀에서 가져온 모의고사 성적 초기 데이터 (배연후·김민지·이시연)
 (function() {
@@ -4866,18 +4961,8 @@ function doLogin() {
 })();
 
 // INIT
-loadData();
-renderAll();
-setAttToday();
-updateAttDateBadge();
-initWonbi();
-setMonthlyToday();
-(function(){ var now=new Date(); var el=document.getElementById('export-month'); if(el){ el.value=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0'); } })();
-
-// 로그인 상태 확인
-if (checkLoginState()) {
-  showApp();
-}
+// Firebase 초기화 및 앱 시작
+fbInitAndLoad();
 
 
 </script>
