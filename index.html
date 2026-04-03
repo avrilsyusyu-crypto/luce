@@ -705,8 +705,10 @@ input::placeholder { color: var(--muted); }
           🚫 학원 휴무일 (해당 날짜는 모든 학생 회차에서 제외)
         </div>
         <div class="flex" style="gap:8px;flex-wrap:wrap;align-items:center;">
-          <input type="date" id="wb-holiday-input"
-            style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 12px;color:var(--text);font-family:inherit;font-size:13px;">
+          <div class="cal-wrap" style="display:inline-block;">
+  <button class="cal-input-btn" id="wb-holiday-input-btn" onclick="openCal('wb-holiday-input',null,event)" style="font-size:13px;padding:7px 11px;"><span>날짜 선택</span></button>
+  <input type="hidden" id="wb-holiday-input" value="">
+</div>
           <input type="text" id="wb-holiday-label" placeholder="사유 (예: 설 연휴)" maxlength="20"
             style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 12px;color:var(--text);font-family:inherit;font-size:13px;width:160px;">
           <button class="btn btn-ghost btn-sm" onclick="addHoliday()">+ 추가</button>
@@ -785,8 +787,10 @@ input::placeholder { color: var(--muted); }
         <div style="margin-bottom:14px;">
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
             <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;">오늘 수업 학생</div>
-            <input type="date" id="fb-today-date" onchange="renderFbTodayStudents()"
-              style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;color:var(--text);font-family:inherit;font-size:12px;">
+            <div class="cal-wrap" style="display:inline-block;">
+  <button class="cal-input-btn" id="fb-today-date-btn" onclick="openCal('fb-today-date','renderFbTodayStudents',event)" style="font-size:13px;padding:7px 11px;"><span>날짜</span></button>
+  <input type="hidden" id="fb-today-date" value="">
+</div>
             <button class="btn btn-ghost btn-sm" onclick="setFbToday()">오늘</button>
             <button class="btn btn-ghost btn-sm" onclick="insertTodayNames()">📋 이름 목록 삽입</button>
           </div>
@@ -836,7 +840,10 @@ input::placeholder { color: var(--muted); }
           </div>
           <div class="field">
             <label>수업 날짜</label>
-            <input type="date" id="fb-date">
+            <div class="cal-wrap" style="display:inline-block;">
+  <button class="cal-input-btn" id="fb-date-btn" onclick="openCal('fb-date',null,event)" style="font-size:13px;padding:7px 11px;"><span>날짜 선택</span></button>
+  <input type="hidden" id="fb-date" value="">
+</div>
           </div>
         </div>
         <div class="field mt12">
@@ -1054,7 +1061,10 @@ input::placeholder { color: var(--muted); }
           <div class="field"><label>대회명</label>
             <input type="text" id="comp-name" placeholder="예: KMC 한국수학경시"></div>
           <div class="field mt12"><label>날짜</label>
-            <input type="date" id="comp-date"></div>
+            <div class="cal-wrap" style="display:inline-block;">
+  <button class="cal-input-btn" id="comp-date-btn" onclick="openCal('comp-date',null,event)" style="font-size:13px;padding:7px 11px;"><span>대회 날짜</span></button>
+  <input type="hidden" id="comp-date" value="">
+</div></div>
           <div class="grid2 mt12">
             <div class="field"><label>수상 결과</label>
               <select id="comp-award">
@@ -1420,7 +1430,10 @@ input::placeholder { color: var(--muted); }
     </div>
     <p style="font-size:13px;color:var(--muted);margin-bottom:16px;" id="withdraw-desc"></p>
     <div class="grid2">
-      <div class="field"><label>퇴원일</label><input type="date" id="withdraw-date"></div>
+      <div class="field"><label>퇴원일</label><div class="cal-wrap" style="display:inline-block;">
+  <button class="cal-input-btn" id="withdraw-date-btn" onclick="openCal('withdraw-date',null,event)" style="font-size:13px;padding:7px 11px;"><span>퇴원일 선택</span></button>
+  <input type="hidden" id="withdraw-date" value="">
+</div></div>
       <div class="field"><label>퇴원 사유</label>
         <select id="withdraw-reason">
           <option value="">선택</option>
@@ -1447,7 +1460,10 @@ input::placeholder { color: var(--muted); }
     <div id="makeup-next-btns" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;"></div>
     <div class="field">
       <label>보충 수업 날짜</label>
-      <input type="date" id="makeup-date-input">
+      <div class="cal-wrap" style="display:inline-block;">
+  <button class="cal-input-btn" id="makeup-date-input-btn" onclick="openCal('makeup-date-input',null,event)" style="font-size:13px;padding:7px 11px;"><span>보충 날짜</span></button>
+  <input type="hidden" id="makeup-date-input" value="">
+</div>
     </div>
     <div class="flex mt16" style="gap:8px;justify-content:flex-end;">
       <button class="btn btn-ghost" onclick="closeModal('modal-makeup')">나중에</button>
@@ -2425,6 +2441,165 @@ function renderCalPopup() {
 
   popup.innerHTML = html;
 }
+
+
+// ═══════════════════════════════════════════════
+// 범용 커스텀 달력
+// ═══════════════════════════════════════════════
+var _calTargetId  = '';   // 현재 열린 달력의 대상 input id
+var _calOnSelect  = null; // 선택 시 콜백
+
+function openCal(inputId, onSelectFn, e) {
+  if (e) e.stopPropagation();
+  var popup = document.getElementById('_cal-popup-generic');
+  if (!popup) return;
+
+  // 같은 달력 다시 누르면 닫기
+  if (popup.classList.contains('open') && _calTargetId === inputId) {
+    popup.classList.remove('open'); return;
+  }
+
+  _calTargetId = inputId;
+  _calOnSelect = onSelectFn || null;
+
+  // 현재 값 기준 연/월 설정
+  var hiddenEl = document.getElementById(inputId);
+  var ymd = hiddenEl ? hiddenEl.value : '';
+  if (ymd) {
+    var p = ymd.split('-');
+    calCurrentYear  = parseInt(p[0]);
+    calCurrentMonth = parseInt(p[1]) - 1;
+  } else {
+    var now2 = new Date();
+    calCurrentYear  = now2.getFullYear();
+    calCurrentMonth = now2.getMonth();
+  }
+
+  renderCalPopupGeneric();
+
+  // 팝업 위치
+  var btn = document.getElementById(inputId + '-btn');
+  if (btn) {
+    var rect = btn.getBoundingClientRect();
+    var popW = Math.min(300, window.innerWidth * 0.92);
+    var left = Math.min(rect.left, window.innerWidth - popW - 8);
+    popup.style.left = Math.max(4, left) + 'px';
+    popup.style.top  = (rect.bottom + 4) + 'px';
+  }
+  popup.classList.add('open');
+  popup.onclick = function(ev){ ev.stopPropagation(); };
+}
+
+function closeCal() {
+  var popup = document.getElementById('_cal-popup-generic');
+  if (popup) popup.classList.remove('open');
+}
+
+function renderCalPopupGeneric() {
+  var popup = document.getElementById('_cal-popup-generic');
+  if (!popup) return;
+
+  var today    = new Date();
+  var todayStr = toLocalDateStr(today);
+  var hiddenEl = document.getElementById(_calTargetId);
+  var selYmd   = hiddenEl ? hiddenEl.value : '';
+  var y = calCurrentYear, m = calCurrentMonth;
+
+  var firstDay = new Date(y, m, 1);
+  var lastDay  = new Date(y, m + 1, 0);
+  var startDow = firstDay.getDay();
+
+  // 수업 있는 날
+  var schoolDays = new Set();
+  if (typeof students !== 'undefined') {
+    students.filter(function(s){ return !s.withdrawn; }).forEach(function(s) {
+      if (!s.days) return;
+      var DAYS2 = ['일','월','화','수','목','금','토'];
+      for (var d2 = 1; d2 <= lastDay.getDate(); d2++) {
+        var dt2  = new Date(y, m, d2);
+        var dow2 = DAYS2[dt2.getDay()];
+        var ymd2 = toLocalDateStr(dt2);
+        if (s.days[dow2] && !isSchoolClosed(ymd2)) schoolDays.add(ymd2);
+      }
+    });
+  }
+
+  var html = '<div class="cal-header">' +
+    '<button class="cal-nav" onclick="calShiftMonthG(-1,event)">‹</button>' +
+    '<span class="cal-header-label">' + y + '년 ' + (m+1) + '월</span>' +
+    '<button class="cal-nav" onclick="calShiftMonthG(1,event)">›</button>' +
+    '</div><div class="cal-grid">' +
+    ['일','월','화','수','목','금','토'].map(function(d){ return '<div class="cal-dow">'+d+'</div>'; }).join('');
+
+  for (var i = 0; i < startDow; i++) html += '<div></div>';
+
+  for (var d = 1; d <= lastDay.getDate(); d++) {
+    var dt   = new Date(y, m, d);
+    var ymd3 = toLocalDateStr(dt);
+    var dow  = dt.getDay();
+    var holName  = typeof getKrHolidayName === 'function' ? getKrHolidayName(ymd3) : null;
+    var manualH  = typeof loadHolidays === 'function' ? loadHolidays().some(function(h){ return h.date===ymd3; }) : false;
+    var closed   = typeof isSchoolClosed === 'function' ? isSchoolClosed(ymd3) : false;
+    var hasClass = schoolDays.has(ymd3);
+
+    var cls = 'cal-day';
+    if (ymd3 === todayStr) cls += ' today';
+    if (ymd3 === selYmd)   cls += ' selected';
+    if (dow === 0)         cls += ' sunday';
+    else if (dow === 6)    cls += ' saturday';
+    if (holName || manualH) cls += ' holiday';
+    if (closed)            cls += ' school-closed';
+
+    var holLbl = holName ? '<div class="cal-day-hol">'+holName+'</div>'
+               : manualH ? '<div class="cal-day-hol">휴무</div>' : '';
+    var dot    = (hasClass && !closed) ? '<div class="cal-day-dot"></div>' : '';
+
+    html += '<div class="'+cls+'" onclick="selectCalDateG(\''+ymd3+'\')">'+d+holLbl+dot+'</div>';
+  }
+  html += '</div><div class="cal-footer">' +
+    '<button class="cal-footer-btn clear-btn" onclick="closeCal()">닫기</button>' +
+    '<button class="cal-footer-btn today-btn" onclick="selectCalDateG(\''+todayStr+'\')">오늘</button>' +
+    '</div>';
+  popup.innerHTML = html;
+}
+
+function calShiftMonthG(delta, e) {
+  if (e) { e.stopPropagation(); e.preventDefault(); }
+  calCurrentMonth += delta;
+  if (calCurrentMonth < 0)  { calCurrentMonth = 11; calCurrentYear--; }
+  if (calCurrentMonth > 11) { calCurrentMonth = 0;  calCurrentYear++; }
+  renderCalPopupGeneric();
+}
+
+function selectCalDateG(ymd) {
+  var hiddenEl = document.getElementById(_calTargetId);
+  if (hiddenEl) hiddenEl.value = ymd;
+
+  // 버튼 표시 업데이트
+  var btn = document.getElementById(_calTargetId + '-btn');
+  if (btn) {
+    var p = ymd.split('-');
+    var d = new Date(parseInt(p[0]), parseInt(p[1])-1, parseInt(p[2]));
+    var DAYS3 = ['(일)','(월)','(화)','(수)','(목)','(금)','(토)'];
+    var DOW_C = ['color:var(--red)','','','','','','color:var(--red)'];
+    var di = d.getDay();
+    var mn = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+    btn.innerHTML = '<span>' + p[0] + '. ' + mn[d.getMonth()] + ' ' + d.getDate() + '.</span>' +
+      '<span style="font-size:11px;font-weight:700;'+DOW_C[di]+'">' + DAYS3[di] + '</span>';
+  }
+
+  closeCal();
+  // 콜백 실행
+  if (_calOnSelect) _calOnSelect(ymd);
+}
+
+// 외부 클릭 시 범용 달력 닫기
+document.addEventListener('click', function(e) {
+  var popup = document.getElementById('_cal-popup-generic');
+  if (popup && popup.classList.contains('open')) {
+    if (!popup.contains(e.target)) closeCal();
+  }
+});
 
 function calShiftMonth(delta, e) {
   if (e) { e.stopPropagation(); e.preventDefault(); }
@@ -3439,8 +3614,11 @@ function switchFbTab(name, btn) {
 }
 
 function setFbToday() {
-  var today = new Date().toISOString().split('T')[0];
+  var today = toLocalDateStr(new Date());
   document.getElementById('fb-today-date').value = today;
+  // 버튼 표시 갱신
+  _calTargetId = 'fb-today-date';
+  selectCalDateG(today);
   renderFbTodayStudents();
 }
 
@@ -3686,7 +3864,11 @@ function initFbStudentSelect() {
 
 function fillFbStudent() {
   var now = new Date();
-  document.getElementById('fb-date').value = now.toISOString().split('T')[0];
+  var fbDateYmd = toLocalDateStr(now);
+  document.getElementById('fb-date').value = fbDateYmd;
+  // 버튼 표시 갱신
+  var fbBtn = document.getElementById('fb-date-btn');
+  if (fbBtn) { _calTargetId='fb-date'; selectCalDateG(fbDateYmd); }
 }
 
 function clearManualFb() {
