@@ -295,124 +295,134 @@ input::placeholder { color: var(--muted); }
   .att-two-col { grid-template-columns: 1fr !important; }
 }
 
-.header-btn .btn-label { display:inline; }
-@media (max-width:480px) { .header-btn .btn-label { display:none; } .header-btn { padding:4px 7px !important; } }
-
-/* ── 모바일 (아이폰 14 Pro Max 기준 430px) ── */
+/* ══ 모바일 전용 (iPhone 14 Pro Max · 430px) ══ */
 @media (max-width: 480px) {
-  /* Safe area */
-  body { padding-bottom: env(safe-area-inset-bottom); }
 
-  /* 헤더 */
+  /* Safe Area */
+  body {
+    padding-bottom: env(safe-area-inset-bottom);
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* 헤더 — 한 줄로 압축 */
   .header {
-    padding: 10px 14px;
-    flex-wrap: wrap;
-    gap: 6px;
-    position: sticky; top: 0; z-index: 100;
-  }
-  .logo { font-size: 16px; }
-  .header-stats {
-    width: 100%;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    margin-left: 0;
+    height: auto;
+    padding: 8px 12px;
+    flex-wrap: nowrap;
+    gap: 8px;
     align-items: center;
+    overflow: visible;
   }
-  .hstat { font-size: 11px; padding: 2px 6px; }
-  #fb-status-badge { font-size: 10px !important; }
+  .logo {
+    font-size: 14px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .header-stats {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .header-stats::-webkit-scrollbar { display: none; }
+  .hstat {
+    font-size: 10px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .hstat strong { font-size: 11px; }
+  #fb-status-badge { font-size: 9px !important; white-space: nowrap; flex-shrink: 0; }
+  .header-btn { padding: 4px 6px !important; font-size: 13px !important; }
+  .header-btn .btn-label { display: none; }
 
-  /* 메인 탭 — 가로 스크롤 */
-  .main { padding: 10px; }
+  /* 메인 패딩 */
+  .main { padding: 8px; }
+
+  /* 탭 — 가로 스크롤 한 줄 */
   .tabs {
     display: flex;
+    flex-wrap: nowrap;
     overflow-x: auto;
-    gap: 4px;
-    padding-bottom: 4px;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    white-space: nowrap;
-    flex-wrap: nowrap;
+    gap: 2px;
+    margin-bottom: 12px;
+    padding-bottom: 0;
   }
   .tabs::-webkit-scrollbar { display: none; }
   .tab-btn {
     font-size: 11px !important;
-    padding: 7px 10px !important;
+    padding: 7px 9px !important;
     flex-shrink: 0;
-    border-radius: 8px;
+    white-space: nowrap;
+    border-radius: 8px 8px 0 0;
   }
 
   /* 카드 */
-  .card { padding: 12px; border-radius: 10px; }
-  .card-title { font-size: 13px; margin-bottom: 10px; }
+  .card { padding: 10px; border-radius: 10px; margin-bottom: 10px; }
+  .card-title { font-size: 11px; margin-bottom: 8px; }
 
-  /* 그리드 — 모바일에서 1열 */
-  .grid2, .grid3, .grid4 { grid-template-columns: 1fr !important; }
+  /* 그리드 전부 1열 */
+  .grid2, .grid3, .grid4 { grid-template-columns: 1fr !important; gap: 8px; }
   .att-two-col { grid-template-columns: 1fr !important; }
 
-  /* 통계 카드 */
-  .stats-row { grid-template-columns: repeat(2, 1fr) !important; gap: 6px; }
-  .stat-card { padding: 10px; }
-  .stat-num { font-size: 20px !important; }
+  /* 통계 카드 2열 */
+  .stats-row { grid-template-columns: repeat(2, 1fr) !important; gap: 6px; margin-bottom: 10px; }
+  .stat-card { padding: 8px 10px; }
+  .stat-num { font-size: 18px !important; }
+  .stat-label { font-size: 10px; }
 
-  /* 출결 체크리스트 버튼 작게 */
-  .att-checklist button, [onclick*="setAtt"] {
-    font-size: 9px !important;
-    padding: 3px 5px !important;
-  }
-
-  /* 테이블 — 가로 스크롤 */
-  .stu-table, .timetable { font-size: 11px; }
-  .timetable-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-
-  /* 성적 현황 그리드 — 1열 */
-  #gtab-overview .card > div[style*="grid-template-columns:1fr 1fr"] {
-    grid-template-columns: 1fr !important;
-  }
-
-  /* 폼 */
-  input, select, textarea {
-    font-size: 16px !important; /* iOS 자동 확대 방지 */
-  }
-  .field label { font-size: 11px; }
+  /* 폼 — iOS 자동 확대 방지 */
+  input, select, textarea { font-size: 16px !important; padding: 8px 10px; }
+  .field label { font-size: 10px; }
 
   /* 버튼 */
-  .btn { font-size: 12px; padding: 8px 12px; }
+  .btn { font-size: 12px; padding: 8px 10px; }
   .btn-sm { font-size: 11px; padding: 5px 8px; }
+
+  /* 테이블 가로 스크롤 */
+  .timetable-wrap,
+  #wonbi-table-wrap,
+  .stu-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .stu-table, .timetable { font-size: 11px; }
 
   /* 모달 */
   .modal-box {
-    width: 95vw !important;
-    max-height: 85vh !important;
-    border-radius: 16px;
+    width: 96vw !important;
+    max-width: 96vw !important;
+    max-height: 88vh !important;
+    border-radius: 14px !important;
     overflow-y: auto;
+    margin: 0 auto;
   }
 
   /* 로그인 */
-  .login-box { width: 90vw; padding: 28px 20px; }
+  #login-screen { padding: 20px; }
+  .login-box { width: 100%; max-width: 340px; padding: 24px 18px; border-radius: 14px; }
+  .login-title { font-size: 18px; }
 
-  /* 원비 테이블 — 스크롤 */
-  #wonbi-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  /* 출결 체크리스트 버튼 */
+  .grade-row, [onclick*="setAtt"] { touch-action: manipulation; }
 
-  /* 피드백 결과 카드 */
-  .fb-msg-card { padding: 10px; }
-  .fb-msg-box { font-size: 12px; }
+  /* 피드백 */
+  .fb-msg-box { font-size: 12px; line-height: 1.6; }
 
-  /* 차트 높이 축소 */
-  canvas { max-height: 200px; }
+  /* 차트 높이 */
+  canvas { max-height: 180px !important; }
 
-  /* 성적 순위표 + 차트 1열 */
+  /* 성적 전체현황 — 순위+차트 1열 */
   .ov-rank-grid { grid-template-columns: 1fr !important; }
-  #ov-elem-rank, #ov-mid-rank, #ov-high-rank { max-height: 220px; }
-}
+  #ov-elem-rank, #ov-mid-rank, #ov-high-rank { max-height: 200px; }
 
-/* 태블릿 */
-@media (min-width: 481px) and (max-width: 900px) {
-  .main { padding: 14px; }
-  .grid2 { grid-template-columns: 1fr 1fr; }
-  .grid3, .grid4 { grid-template-columns: 1fr 1fr; }
-  .tabs { flex-wrap: nowrap; overflow-x: auto; }
-  .tab-btn { font-size: 12px; padding: 7px 12px; }
+  /* 서브탭 버튼 */
+  [id^="gtab-btn-"], [id^="fbtab-btn-"] {
+    font-size: 11px !important;
+    padding: 6px 8px !important;
+  }
 }
 </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -498,7 +508,13 @@ input::placeholder { color: var(--muted); }
       <div class="flex" style="gap:10px;align-items:center;flex-wrap:wrap;">
         <input type="date" id="att-date" onchange="renderAttendance(); updateAttDateBadge()"
           style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-family:inherit;font-size:14px;font-weight:600;">
-        <button class="btn btn-ghost btn-sm" onclick="setAttToday()">오늘</button>
+        <div class="flex" style="gap:4px;flex-wrap:wrap;">
+          <button class="btn btn-ghost btn-sm" onclick="shiftAttDate(-7)" title="일주일 전">◀◀</button>
+          <button class="btn btn-ghost btn-sm" onclick="shiftAttDate(-1)" title="전날">◀</button>
+          <button class="btn btn-ghost btn-sm" onclick="setAttToday()" style="font-weight:700;">오늘</button>
+          <button class="btn btn-ghost btn-sm" onclick="shiftAttDate(1)"  title="다음날">▶</button>
+          <button class="btn btn-ghost btn-sm" onclick="shiftAttDate(7)"  title="일주일 후">▶▶</button>
+        </div>
         <span id="att-date-badge" style="font-size:12px;"></span>
         <button class="btn btn-sm" id="btn-weekend-add" style="display:none;background:rgba(79,142,247,0.15);color:var(--accent);border:1px solid rgba(79,142,247,0.3);" onclick="openWeekendAddModal()">➕ 보충 학생 추가</button>
       </div>
@@ -1403,8 +1419,18 @@ var FB_CONFIG = {
   appId:             "1:434046906271:web:00c923586ff609068f17aa"
 };
 
-firebase.initializeApp(FB_CONFIG);
-var fbDb = firebase.database();
+// Firebase SDK 로드 확인 후 초기화
+var fbDb = null;
+try {
+  if (typeof firebase !== 'undefined') {
+    firebase.initializeApp(FB_CONFIG);
+    fbDb = firebase.database();
+  } else {
+    console.warn('Firebase SDK 로드되지 않음 — 오프라인 모드로 실행');
+  }
+} catch(e) {
+  console.warn('Firebase 초기화 실패:', e.message);
+}
 
 var SYNC_KEYS = [
   'luche_students_v2','luche_att_v1','luche_wonbi_v1',
@@ -1417,6 +1443,7 @@ var fbListeners = {};
 
 // Firebase → localStorage 실시간 수신
 function fbStartListeners() {
+  if (!fbDb) return;
   SYNC_KEYS.forEach(function(key) {
     fbDb.ref('luche/' + key).on('value', function(snap) {
       if (fbWriteLock) return;
@@ -1435,7 +1462,7 @@ function fbStartListeners() {
 var _origSet = Storage.prototype.setItem;
 Storage.prototype.setItem = function(key, val) {
   _origSet.call(this, key, val);
-  if (!fbWriteLock && typeof fbDb !== 'undefined' && SYNC_KEYS.indexOf(key) >= 0) {
+  if (!fbWriteLock && fbDb && SYNC_KEYS.indexOf(key) >= 0) {
     fbDb.ref('luche/' + key).set(val).catch(function(e){ console.warn('FB write:', e); });
   }
 };
@@ -1443,13 +1470,13 @@ Storage.prototype.setItem = function(key, val) {
 var _origDel = Storage.prototype.removeItem;
 Storage.prototype.removeItem = function(key) {
   _origDel.call(this, key);
-  if (!fbWriteLock && typeof fbDb !== 'undefined' && SYNC_KEYS.indexOf(key) >= 0) {
+  if (!fbWriteLock && fbDb && SYNC_KEYS.indexOf(key) >= 0) {
     fbDb.ref('luche/' + key).remove().catch(function(e){ console.warn('FB del:', e); });
   }
 };
 
 // 연결 상태 뱃지
-fbDb.ref('.info/connected').on('value', function(snap) {
+if (fbDb) fbDb.ref('.info/connected').on('value', function(snap) {
   var badge = document.getElementById('fb-status-badge');
   if (badge) {
     badge.textContent = snap.val() ? '🟢 동기화 중' : '🔴 오프라인';
@@ -1459,6 +1486,15 @@ fbDb.ref('.info/connected').on('value', function(snap) {
 
 // Firebase 데이터 우선 로드 후 앱 시작
 function fbInitAndLoad() {
+  if (!fbDb) {
+    // Firebase 없으면 localStorage만으로 바로 시작
+    loadData(); renderAll(); setAttToday();
+    updateAttDateBadge(); initWonbi(); setMonthlyToday();
+    (function(){ var now=new Date(); var el=document.getElementById('export-month');
+      if(el) el.value=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0'); })();
+    if (checkLoginState()) showApp();
+    return;
+  }
   var loaded = 0; var total = SYNC_KEYS.length;
   SYNC_KEYS.forEach(function(key) {
     fbDb.ref('luche/' + key).once('value', function(snap) {
@@ -2197,6 +2233,17 @@ function saveAttendance(data) {
   localStorage.setItem('luche_att_v1', JSON.stringify(data));
 }
 
+
+function shiftAttDate(days) {
+  var el = document.getElementById('att-date');
+  if (!el || !el.value) return;
+  var d = new Date(el.value + 'T00:00:00');
+  d.setDate(d.getDate() + days);
+  el.value = d.toISOString().slice(0, 10);
+  renderAttendance();
+  updateAttDateBadge();
+}
+
 function setAttToday() {
   const today = new Date();
   const ymd   = today.toISOString().split('T')[0];
@@ -2454,10 +2501,14 @@ function renderAttendance() {
   </tr></thead><tbody>`;
 
   SLOTS.forEach((slot, si) => {
-    const isHour = slot.endsWith(':00');
+    const isHour  = slot.endsWith(':00');
     const stuList = grid[si];
+    const cnt     = stuList.length;
+    const cntBadge = cnt > 0
+      ? `<span style="font-size:9px;color:var(--accent);font-weight:700;margin-left:2px;">(${cnt})</span>`
+      : '';
     html += `<tr style="${isHour ? 'border-top:1px solid rgba(255,255,255,0.08)' : ''}">`;
-    html += `<td class="time-label" style="${isHour ? 'font-weight:700;color:var(--text)' : ''}">${slot}</td>`;
+    html += `<td class="time-label" style="${isHour ? 'font-weight:700;color:var(--text)' : ''}">${slot}${cntBadge}</td>`;
     html += `<td style="padding:2px 6px;">`;
     if (stuList.length > 0) {
       html += `<div style="display:flex;gap:3px;flex-wrap:wrap;">`;
@@ -5078,8 +5129,30 @@ function doLogin() {
 })();
 
 // INIT
-// Firebase 초기화 및 앱 시작
-fbInitAndLoad();
+// Firebase SDK 로드 완료 후 앱 시작
+window.addEventListener('load', function() {
+  // Firebase SDK 재시도 (CDN 로드 완료 시점)
+  if (!fbDb && typeof firebase !== 'undefined') {
+    try {
+      // 이미 초기화됐으면 기존 앱 사용
+      var apps = firebase.apps;
+      if (apps && apps.length > 0) {
+        fbDb = apps[0].database();
+      } else {
+        firebase.initializeApp(FB_CONFIG);
+        fbDb = firebase.database();
+      }
+      if (fbDb) fbDb.ref('.info/connected').on('value', function(snap) {
+        var badge = document.getElementById('fb-status-badge');
+        if (badge) {
+          badge.textContent = snap.val() ? '🟢 동기화 중' : '🔴 오프라인';
+          badge.style.color = snap.val() ? 'var(--green)' : 'var(--red)';
+        }
+      });
+    } catch(e) { console.warn('Firebase 재초기화 실패:', e); }
+  }
+  fbInitAndLoad();
+});
 
 
 </script>
