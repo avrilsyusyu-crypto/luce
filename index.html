@@ -84,6 +84,7 @@ input::placeholder { color: var(--muted); }
 .stat-filter:hover { border-color: var(--accent); transform: translateY(-2px); }
 .monthly-filter-btn.active { background:var(--accent); color:#fff; border-color:var(--accent); }
 .ov-toggle.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+.class-grade-btn.active { background:var(--green); color:#fff; border-color:var(--green); }
 .stat-filter.active { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(79,142,247,0.25); }
 
 /* Tags */
@@ -490,6 +491,9 @@ input::placeholder { color: var(--muted); }
 .cal-footer-btn.today-btn { color:var(--accent); }
 .cal-footer-btn.clear-btn { color:var(--muted); }
 
+
+.exam-two-col { display:grid; grid-template-columns:300px 1fr; gap:16px; }
+@media (max-width:900px) { .exam-two-col { grid-template-columns:1fr; } }
 </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
@@ -1053,7 +1057,7 @@ input::placeholder { color: var(--muted); }
     <!-- ── 초등 경시대회 ── -->
     <div id="gtab-elem" class="grade-subtab" style="display:none;">
       <!-- 상단: 입력폼 + 기록목록 -->
-      <div style="display:grid;grid-template-columns:300px 1fr;gap:16px;margin-bottom:16px;">
+      <div class="exam-two-col" style="display:grid;grid-template-columns:300px 1fr;gap:16px;margin-bottom:16px;">
 
         <!-- 입력 폼 -->
         <div class="card" style="align-self:start;">
@@ -1110,7 +1114,7 @@ input::placeholder { color: var(--muted); }
     <!-- 내신 공통 템플릿 -->
     <template id="tmpl-exam">
       <!-- 상단: 입력폼 + 기록목록 -->
-      <div style="display:grid;grid-template-columns:300px 1fr;gap:16px;margin-bottom:16px;">
+      <div class="exam-two-col" style="display:grid;grid-template-columns:300px 1fr;gap:16px;margin-bottom:16px;">
 
         <!-- 입력 폼 -->
         <div class="card" style="align-self:start;">
@@ -1158,7 +1162,7 @@ input::placeholder { color: var(--muted); }
       </div>
 
       <!-- 모의고사 섹션 -->
-      <div style="display:grid;grid-template-columns:300px 1fr;gap:16px;margin-bottom:16px;">
+      <div class="exam-two-col" style="display:grid;grid-template-columns:300px 1fr;gap:16px;margin-bottom:16px;">
         <!-- 모의고사 입력폼 -->
         <div class="card" style="align-self:start;">
           <div class="card-title"><span class="dot" style="background:var(--purple)"></span> 모의고사 입력</div>
@@ -1195,7 +1199,7 @@ input::placeholder { color: var(--muted); }
         </div>
       </div>
 
-      <!-- 하단: 큰 그래프 (내신 + 모의 통합) -->
+      <!-- 하단: 개인 그래프 -->
       <div class="card">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
           <div class="card-title" style="margin-bottom:0;"><span class="dot" style="background:var(--accent)"></span> 성적 추이 그래프</div>
@@ -1206,7 +1210,22 @@ input::placeholder { color: var(--muted); }
             <div id="exam-chart-summary" style="font-size:12px;color:var(--muted);"></div>
           </div>
         </div>
-        <div style="height:320px;"><canvas id="exam-chart"></canvas></div>
+        <div style="height:280px;"><canvas id="exam-chart"></canvas></div>
+      </div>
+
+      <!-- 학년별 전체 성적 추이 -->
+      <div class="card" style="margin-top:4px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+          <div class="card-title" style="margin-bottom:0;"><span class="dot" style="background:var(--green)"></span> 학년별 전체 성적 추이</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;" id="class-chart-filter">
+            <button class="btn btn-ghost btn-sm class-grade-btn active" data-grade="1"   style="font-size:11px;">1학년</button>
+            <button class="btn btn-ghost btn-sm class-grade-btn"        data-grade="2"   style="font-size:11px;">2학년</button>
+            <button class="btn btn-ghost btn-sm class-grade-btn"        data-grade="3"   style="font-size:11px;">3학년</button>
+            <button class="btn btn-ghost btn-sm class-grade-btn"        data-grade="all" style="font-size:11px;">전체</button>
+          </div>
+        </div>
+        <div id="class-chart-wrap" style="height:300px;"><canvas id="class-chart"></canvas></div>
+        <div id="class-chart-legend" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;"></div>
       </div>
     </template>
 
@@ -4524,6 +4543,172 @@ function renderOverviewSection(opt) {
   });
 }
 
+
+// ─── 학년별 전체 성적 추이 ────────────────────────────────
+var classGradeFilter = {'mid':'1', 'high':'1'};
+
+function setClassGrade(btn, grade) {
+  var type = gradeTab; // 'mid' or 'high'
+  classGradeFilter[type] = grade;
+  // 버튼 active
+  var prefix = type + '-';
+  var filterEl = document.getElementById(prefix + 'class-chart-filter');
+  if (filterEl) filterEl.querySelectorAll('.class-grade-btn').forEach(function(b){
+    b.classList.remove('active');
+  });
+  if (btn) btn.classList.add('active');
+  renderClassChart(type);
+}
+
+function renderClassChart(type) {
+  var prefix  = type + '-';
+  var canvas  = document.getElementById(prefix + 'class-chart');
+  var legendEl= document.getElementById(prefix + 'class-chart-legend');
+  if (!canvas) return;
+
+  var gd      = loadGradeData();
+  var grade   = classGradeFilter[type] || '1';
+  var TLBL    = {'1-mid':'1학기중간','1-final':'1학기기말','2-mid':'2학기중간','2-final':'2학기기말'};
+  var TERM_ORDER = ['1-mid','1-final','2-mid','2-final'];
+
+  // 해당 타입·학년 학생 필터
+  var prefix_grade = type === 'mid' ? '중' : '고';
+  var targetStudents = students.filter(function(s) {
+    if (s.withdrawn) return false;
+    if (!s.grade.startsWith(prefix_grade)) return false;
+    if (grade === 'all') return true;
+    return s.grade === prefix_grade + grade;
+  });
+
+  if (targetStudents.length === 0) {
+    if (gradeCharts[prefix+'class']) { gradeCharts[prefix+'class'].destroy(); delete gradeCharts[prefix+'class']; }
+    if (legendEl) legendEl.innerHTML = '<span style="font-size:12px;color:var(--muted);">해당 학년 학생 없음</span>';
+    return;
+  }
+
+  // 시험 목록 수집 (해당 학생들의 모든 시험)
+  var termSet = new Set();
+  targetStudents.forEach(function(s) {
+    var recs = (gd[type] && gd[type][s.id]) ? gd[type][s.id] : [];
+    recs.forEach(function(r) { if (r.math !== null) termSet.add(r.year + '-' + r.term); });
+  });
+
+  // 정렬: 연도 → 학기 순
+  var allTerms = Array.from(termSet).sort(function(a, b) {
+    var ay = parseInt(a), by = parseInt(b);
+    var at = a.slice(5), bt = b.slice(5);
+    return ay !== by ? ay - by : TERM_ORDER.indexOf(at) - TERM_ORDER.indexOf(bt);
+  });
+
+  if (allTerms.length === 0) {
+    if (gradeCharts[prefix+'class']) { gradeCharts[prefix+'class'].destroy(); delete gradeCharts[prefix+'class']; }
+    if (legendEl) legendEl.innerHTML = '<span style="font-size:12px;color:var(--muted);">성적 데이터 없음</span>';
+    return;
+  }
+
+  var labels = allTerms.map(function(t) {
+    var y = t.slice(0,4), tm = t.slice(5);
+    return y + '\n' + (TLBL[tm] || tm);
+  });
+
+  // 색상 팔레트
+  var COLORS = [
+    'rgba(46,111,218,1)','rgba(26,158,110,1)','rgba(98,64,212,1)',
+    'rgba(224,122,42,1)','rgba(214,59,59,1)','rgba(196,154,0,1)',
+    'rgba(79,180,247,1)','rgba(160,100,200,1)'
+  ];
+
+  // 학생별 데이터셋
+  var datasets = targetStudents.map(function(s, i) {
+    var recs = (gd[type] && gd[type][s.id]) ? gd[type][s.id] : [];
+    var color = COLORS[i % COLORS.length];
+    var data = allTerms.map(function(t) {
+      var y = parseInt(t), tm = t.slice(5);
+      var r = recs.find(function(r2) { return r2.year === y && r2.term === tm && r2.math !== null; });
+      return r ? r.math : null;
+    });
+    return {
+      label: s.name,
+      data: data,
+      borderColor: color,
+      backgroundColor: color.replace('1)', '0.1)'),
+      borderWidth: 2,
+      pointRadius: 5,
+      pointBackgroundColor: color,
+      pointBorderColor: '#fff',
+      pointBorderWidth: 2,
+      tension: 0.3,
+      spanGaps: true
+    };
+  });
+
+  // 반평균 데이터셋
+  var avgData = allTerms.map(function(t) {
+    var y = parseInt(t), tm = t.slice(5);
+    var vals = targetStudents.map(function(s) {
+      var recs = (gd[type] && gd[type][s.id]) ? gd[type][s.id] : [];
+      var r = recs.find(function(r2) { return r2.year === y && r2.term === tm && r2.math !== null; });
+      return r ? r.math : null;
+    }).filter(function(v) { return v !== null; });
+    return vals.length > 0 ? Math.round(vals.reduce(function(a,b){return a+b;},0)/vals.length*10)/10 : null;
+  });
+
+  datasets.push({
+    label: '반 평균',
+    data: avgData,
+    borderColor: 'rgba(247,147,79,0.9)',
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    borderDash: [6, 4],
+    pointRadius: 3,
+    pointBackgroundColor: 'rgba(247,147,79,0.9)',
+    tension: 0.3,
+    spanGaps: true,
+    borderDashOffset: 0
+  });
+
+  if (gradeCharts[prefix+'class']) { gradeCharts[prefix+'class'].destroy(); }
+  gradeCharts[prefix+'class'] = new Chart(canvas, {
+    type: 'line',
+    data: { labels: labels, datasets: datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              return ctx.dataset.label + ': ' + (ctx.raw !== null ? ctx.raw + '점' : '-');
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          min: 0, max: 100,
+          grid: { color: function(ctx) {
+            return ctx.tick.value === 80 ? 'rgba(46,111,218,0.2)' : ctx.tick.value === 60 ? 'rgba(214,59,59,0.15)' : 'rgba(0,0,0,0.05)';
+          }},
+          ticks: { stepSize: 10, callback: function(v) { return v===80?'▶80':v===60?'▶60':v; } }
+        },
+        x: { grid: { display: false }, ticks: { font: { size: 10 }, maxRotation: 0 } }
+      }
+    }
+  });
+
+  // 범례
+  if (legendEl) {
+    legendEl.innerHTML = datasets.map(function(ds) {
+      var isDash = ds.borderDash;
+      return '<div style="display:flex;align-items:center;gap:4px;font-size:11px;">' +
+        '<div style="width:20px;height:3px;background:' + ds.borderColor + ';border-radius:2px;' +
+        (isDash ? 'border-top:2px dashed '+ds.borderColor+';background:transparent;' : '') + '"></div>' +
+        '<span style="color:var(--text);">' + ds.label + '</span></div>';
+    }).join('');
+  }
+}
+
 // ─── 모의고사 기록 ────────────────────────────────────────
 function getMockRecords(type, sid) {
   var d = loadGradeData();
@@ -4933,6 +5118,10 @@ function switchGradeTab(tab, btn) {
   renderGradeStudentSelect();
   var sid = parseInt(document.getElementById('grade-student-sel').value);
   if (sid) renderGradeContent(sid);
+  else if (gradeTab === 'mid' || gradeTab === 'high') {
+    // 학생 미선택이어도 학년별 차트는 표시
+    setTimeout(function(){ renderClassChart(gradeTab); }, 100);
+  }
 }
 
 function initGradeSubtab(tab) {
@@ -4942,15 +5131,30 @@ function initGradeSubtab(tab) {
   var tmpl = document.getElementById('tmpl-exam');
   container.innerHTML = tmpl.innerHTML;
   // id 중복 방지 — 접두사 붙이기
-  ['exam-year','exam-term','exam-math','exam-grade-val','exam-avg','exam-rank','exam-memo','exam-list','exam-chart','mock-year','mock-term','mock-round','mock-score','mock-memo','mock-list','mock-avg-badge','mock-avg-badge','chart-show-mock','exam-chart-summary'].forEach(function(id) {
+  ['exam-year','exam-term','exam-math','exam-grade-val','exam-avg','exam-rank','exam-memo','exam-list','exam-chart','exam-chart-summary','chart-show-mock','mock-year','mock-term','mock-round','mock-score','mock-memo','mock-list','mock-avg-badge','class-chart','class-chart-filter','class-chart-wrap','class-chart-legend'].forEach(function(id) {
     var el = container.querySelector('#'+id);
     if (el) el.id = tab+'-'+id;
   });
   var btn = container.querySelector('button[onclick="saveExamRecord()"]');
   if (btn) btn.setAttribute('onclick', 'saveExamRecord("'+tab+'")');
-  var mbtn = container.querySelector('button[onclick="saveMockRecord()"]');
-  if (mbtn) mbtn.setAttribute('onclick', 'saveMockRecord("'+tab+'")');
-  var cbx = container.querySelector('#chart-show-mock');
+  // saveMockRecord 버튼 — data-action 방식으로 찾기
+  container.querySelectorAll('button').forEach(function(b){
+    if (b.getAttribute('onclick') === 'saveMockRecord()') b.setAttribute('onclick', 'saveMockRecord("'+tab+'")');
+  });
+  // class-grade-btn — data-grade + click 이벤트로 처리
+  (function(t) {
+    container.querySelectorAll('.class-grade-btn').forEach(function(b) {
+      var grade = b.getAttribute('data-grade') || '1';
+      b.onclick = function() {
+        classGradeFilter[t] = grade;
+        var filterEl = document.getElementById(t + '-class-chart-filter');
+        if (filterEl) filterEl.querySelectorAll('.class-grade-btn').forEach(function(b2) { b2.classList.remove('active'); });
+        this.classList.add('active');
+        renderClassChart(t);
+      };
+    });
+  })(tab);
+  var cbx = container.querySelector('#'+tab+'-chart-show-mock');
   if (cbx) cbx.setAttribute('onchange', 'refreshExamChart("'+tab+'")');
 }
 
