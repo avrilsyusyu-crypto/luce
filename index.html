@@ -1554,12 +1554,24 @@ function fbStartListeners() {
   SYNC_KEYS.forEach(function(key) {
     fbDb.ref('luche/' + key).on('value', function(snap) {
       if (fbWriteLock) return;
-      var val = snap.val();
-      if (val !== null) {
+      var fbVal = snap.val();
+      if (fbVal !== null) {
+        // Firebase에 데이터 있음 → localStorage 업데이트
+        var strVal = typeof fbVal === 'string' ? fbVal : JSON.stringify(fbVal);
+        var localVal = localStorage.getItem(key);
+        if (strVal === localVal) return; // 동일하면 스킵 (렌더링 불필요)
         fbWriteLock = true;
-        localStorage.setItem(key, typeof val === 'string' ? val : JSON.stringify(val));
+        _origSet.call(localStorage, key, strVal);
         fbWriteLock = false;
         if (typeof loadData === 'function') { loadData(); renderAll(); }
+      } else {
+        // Firebase에 데이터 없음 → localStorage에 있으면 Firebase로 업로드
+        var existing = localStorage.getItem(key);
+        if (existing) {
+          fbDb.ref('luche/' + key).set(existing).catch(function(e) {
+            console.warn('FB upload:', e);
+          });
+        }
       }
     });
   });
@@ -1607,9 +1619,18 @@ function fbInitAndLoad() {
     fbDb.ref('luche/' + key).once('value', function(snap) {
       var val = snap.val();
       if (val !== null) {
+        // Firebase 데이터 → localStorage (Firebase 우선)
         fbWriteLock = true;
         _origSet.call(localStorage, key, typeof val === 'string' ? val : JSON.stringify(val));
         fbWriteLock = false;
+      } else {
+        // Firebase에 없고 localStorage에 있으면 → Firebase로 업로드
+        var localExisting = localStorage.getItem(key);
+        if (localExisting) {
+          fbDb.ref('luche/' + key).set(localExisting).catch(function(e) {
+            console.warn('FB init upload:', e);
+          });
+        }
       }
       if (++loaded === total) {
         fbStartListeners();
