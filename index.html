@@ -435,7 +435,7 @@ input::placeholder { color: var(--muted); }
 }
 .cal-input-btn:hover { border-color:var(--accent); }
 .cal-popup {
-  position:fixed; z-index:9999;
+  position:fixed; z-index:10001;
   background:var(--surface);border:1px solid var(--border);border-radius:14px;
   box-shadow:0 8px 32px rgba(0,0,0,0.18);padding:14px;
   width:min(300px,92vw);
@@ -1509,6 +1509,7 @@ input::placeholder { color: var(--muted); }
   </div>
 </div>
 
+<div class="cal-popup" id="_cal-popup-generic" style="z-index:10001;"></div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -2829,7 +2830,8 @@ function openMakeupModal(origYmd, sid) {
   if (btnsEl && nextDates.length > 0) {
     btnsEl.innerHTML = '<span style="font-size:11px;color:var(--muted);align-self:center;">다음 수업 →</span>' +
       nextDates.map(nd =>
-        `<button class="btn btn-ghost btn-sm" onclick="document.getElementById('makeup-date-input').value='${nd.ymd}'"
+        `<button class="btn btn-ghost btn-sm"
+          onclick="_calTargetId='makeup-date-input';selectCalDateG('${nd.ymd}')"
           style="font-size:11px;">${nd.ymd.slice(5).replace('-','/')} ${nd.dow} ${nd.time}</button>`
       ).join('');
   } else if (btnsEl) {
@@ -2837,13 +2839,16 @@ function openMakeupModal(origYmd, sid) {
   }
 
   // 기본값: 다음 수업 첫번째 날 or 다음날
+  var defaultYmd;
   if (nextDates.length > 0) {
-    document.getElementById('makeup-date-input').value = nextDates[0].ymd;
+    defaultYmd = nextDates[0].ymd;
   } else {
-    const next = new Date(origYmd + 'T00:00:00');
+    var next = new Date(origYmd + 'T00:00:00');
     next.setDate(next.getDate() + 1);
-    document.getElementById('makeup-date-input').value = next.toISOString().split('T')[0];
+    defaultYmd = toLocalDateStr(next);
   }
+  _calTargetId = 'makeup-date-input';
+  selectCalDateG(defaultYmd);
   document.getElementById('modal-makeup').classList.remove('hidden');
 }
 function confirmMakeupDate() {
