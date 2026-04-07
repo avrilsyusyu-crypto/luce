@@ -1612,6 +1612,7 @@ function fbInitAndLoad() {
     (function(){ var now=new Date(); var el=document.getElementById('export-month');
       if(el) el.value=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0'); })();
     if (checkLoginState()) showApp();
+    setTimeout(checkAndRunPromotion, 500);
     return;
   }
   var loaded = 0; var total = SYNC_KEYS.length;
@@ -1639,6 +1640,8 @@ function fbInitAndLoad() {
         (function(){ var now=new Date(); var el=document.getElementById('export-month');
           if(el) el.value=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0'); })();
         if (checkLoginState()) showApp();
+        // 학년 진급 체크 (1월 1일 이후 첫 접속 시)
+        setTimeout(checkAndRunPromotion, 500);
       }
     });
   });
@@ -5695,6 +5698,78 @@ function doReset() {
     if (k !== 'luche_auth_v1') localStorage.removeItem(k);
   });
   location.reload();
+}
+
+
+// ═══════════════════════════════════════════════
+// 학년 자동 진급 (매년 1월 1일)
+// ═══════════════════════════════════════════════
+var GRADE_TO_CLS = {
+  '초1':'초등 3회','초2':'초등 3회','초3':'초등 3회',
+  '초4':'초등 2회','초5':'초등 2회','초6':'초등 2회',
+  '중1':'중등 3회','중2':'중등 3회','중3':'중등 3회',
+  '고1':'고등 3회','고2':'고등 3회','고3':'고등 3회'
+};
+var GRADE_TO_BASE = {
+  '초1':260000,'초2':260000,'초3':260000,
+  '초4':180000,'초5':180000,'초6':180000,
+  '중1':360000,'중2':360000,'중3':360000,
+  '고1':475000,'고2':475000,'고3':475000
+};
+
+function getNextGrade(grade) {
+  var map = {
+    '초1':'초2','초2':'초3','초3':'초4','초4':'초5','초5':'초6',
+    '초6':'중1','중1':'중2','중2':'중3','중3':'고1',
+    '고1':'고2','고2':'고3','고3':null
+  };
+  return map[grade] || null;
+}
+
+function checkAndRunPromotion() {
+  var KEY = 'luche_promotion_year';
+  var thisYear = new Date().getFullYear();
+  var lastDone = parseInt(localStorage.getItem(KEY) || '0');
+  if (lastDone >= thisYear) return;
+
+  var now = new Date();
+  if (now.getMonth() !== 0) return; // 1월만
+
+  var targets = students.filter(function(s) {
+    return !s.withdrawn && getNextGrade(s.grade) !== null;
+  });
+  if (targets.length === 0) { localStorage.setItem(KEY, String(thisYear)); return; }
+
+  var previewLines = targets.map(function(s) {
+    var next = getNextGrade(s.grade);
+    var nextBase = GRADE_TO_BASE[next] || s.base;
+    return s.name + ' : ' + s.grade + ' \u2192 ' + next +
+      (nextBase !== s.base ? ' (원비 ' + nextBase.toLocaleString() + '원)' : '');
+  }).join('\n');
+
+  var msg = thisYear + '년 새해! 학년 진급을 진행할까요?\n\n' +
+    '[ 진급 대상 ' + targets.length + '명 ]\n' + previewLines +
+    '\n\n\u2573 고3은 졸업 처리되지 않으며 직접 퇴원 처리해주세요.';
+
+  if (!confirm(msg)) {
+    localStorage.setItem(KEY, String(thisYear));
+    return;
+  }
+
+  students.forEach(function(s) {
+    if (s.withdrawn) return;
+    var next = getNextGrade(s.grade);
+    if (!next) return;
+    s.grade = next;
+    s.cls   = GRADE_TO_CLS[next] || s.cls;
+    s.base  = GRADE_TO_BASE[next] || s.base;
+  });
+
+  saveData();
+  renderStudentTable();
+  renderAll();
+  localStorage.setItem(KEY, String(thisYear));
+  toast('\uD83C\uDF89 ' + targets.length + '명 학년 진급 완료! 원비도 자동 갱신됐어요.');
 }
 
 // INIT — Firebase 초기화 후 앱 시작
