@@ -3426,19 +3426,42 @@ function getUnitPrice(s) {
   return Math.round(raw / 100) * 100; // 100원 단위 반올림
 }
 
-// 이달 실제 수업 회차 (학생별 요일 기준, 공휴일·휴무 제외)
+// 전달 실제 수업 회차 (원비 청구월의 전달 기준, 공휴일·휴무 제외)
 function getStudentSessions(s) {
   const mo = getWonbiKey();
   if (!mo) return 0;
-  const [year, month] = mo.split('-').map(Number);
+  // 청구월의 전달 계산
+  const prevMo = getPrevMonth(mo);
+  const [year, month] = prevMo.split('-').map(Number);
   const daysInMonth   = new Date(year, month, 0).getDate();
   const DOW_MAP = {0:'일',1:'월',2:'화',3:'수',4:'목',5:'금',6:'토'};
+
+  // 보충 예정 잡힌 결석의 원래 날짜 (차감 제외)
+  var ms = loadMakeupSchedule();
+  var makeupOrigins = new Set();
+  Object.keys(ms).forEach(function(makeupYmd) {
+    if (ms[makeupYmd][s.id] && ms[makeupYmd][s.id].origDate) {
+      makeupOrigins.add(ms[makeupYmd][s.id].origDate);
+    }
+  });
+
+  // 출결 데이터
+  var att = loadAttendance();
+
   let count = 0;
   for (let d = 1; d <= daysInMonth; d++) {
-    const date = `${mo}-${String(d).padStart(2,'0')}`;
+    const date = prevMo + '-' + String(d).padStart(2,'0');
     if (isSchoolClosed(date)) continue;
     const dow = DOW_MAP[new Date(date + 'T00:00:00').getDay()];
-    if (s.days && s.days[dow]) count++;
+    if (!s.days || !s.days[dow]) continue;
+
+    const st = att[date] && att[date][s.id];
+    // 결석 중 보충 예정 없는 경우만 차감 (미정·보충예정은 정상 수업으로 카운트)
+    if (st === 'absent' && !makeupOrigins.has(date)) {
+      // 결석 → 차감 (카운트 안 함)
+      continue;
+    }
+    count++;
   }
   return count;
 }
@@ -3446,20 +3469,21 @@ function getStudentSessions(s) {
 function calcTotal(s, rec) {
   const baseSess = getBaseSessions(s);
   const unit     = getUnitPrice(s);
-  const absDed   = (rec.absent || 0) * unit;
+  // actual = 전달 실제 수업 횟수 (결석 차감, 보충예정 제외 포함)
   const actual   = getStudentSessions(s);
-  const extra    = Math.max(0, actual - baseSess);
-  const extraAmt = extra * unit;
-  return Math.max(0, getFinal(s) - absDed + extraAmt + (rec.textbook || 0));
+  const diff     = actual - baseSess; // 양수: 초과, 음수: 미달
+  const adjustAmt = diff * unit;     // 음수면 차감, 양수면 추가
+  return Math.max(0, getFinal(s) + adjustAmt + (rec.textbook || 0));
 }
 
-// 초과 정보 반환
+// 수업 회차 정보 반환
 function getExtraInfo(s) {
   const baseSess = getBaseSessions(s);
   const unit     = getUnitPrice(s);
   const actual   = getStudentSessions(s);
-  const extra    = Math.max(0, actual - baseSess);
-  return { actual, extra, extraAmt: extra * unit, baseSess };
+  const diff     = actual - baseSess;
+  const extra    = Math.max(0, diff);
+  return { actual, extra, extraAmt: diff * unit, baseSess, diff };
 }
 
 function renderWonbiRow(mo, sid) {
@@ -3467,12 +3491,23 @@ function renderWonbiRow(mo, sid) {
   if (!s) return;
   const rec    = getWonbiRecord(mo, sid);
   const unit   = getUnitPrice(s);
-  const absDed = (rec.absent||0) * unit;
   const total  = calcTotal(s, rec);
   const el = (id) => document.getElementById(id);
-  if (el(`wb-total-${sid}`))  el(`wb-total-${sid}`).textContent  = total.toLocaleString() + '원';
-  if (el(`wb-absdec-${sid}`)) el(`wb-absdec-${sid}`).textContent = absDed > 0 ? `-${absDed.toLocaleString()}` : '—';
-  // 총액 강조: 초과 있으면 주황
+  if (el(`wb-total-${sid}`)) el(`wb-total-${sid}`).textContent = total.toLocaleString() + '원';
+  // 결석 차감 표시 → 실제 회차 기반 증감 표시
+  const { actual, baseSess, diff } = getExtraInfo(s);
+  if (el(`wb-absdec-${sid}`)) {
+    if (diff < 0) {
+      el(`wb-absdec-${sid}`).textContent = `${actual}회 (-${Math.abs(diff)}회)`;
+      el(`wb-absdec-${sid}`).style.color = 'var(--red)';
+    } else if (diff > 0) {
+      el(`wb-absdec-${sid}`).textContent = `${actual}회 (+${diff}회)`;
+      el(`wb-absdec-${sid}`).style.color = 'var(--orange)';
+    } else {
+      el(`wb-absdec-${sid}`).textContent = `${actual}회`;
+      el(`wb-absdec-${sid}`).style.color = 'var(--muted)';
+    }
+  }
   const { extraAmt } = getExtraInfo(s);
   if (el(`wb-total-${sid}`)) el(`wb-total-${sid}`).style.color = extraAmt > 0 ? 'var(--orange)' : 'var(--accent)';
   if (el(`wb-paid-${sid}`)) {
