@@ -1578,35 +1578,7 @@ function doLogin() {
 })();
 
 // INIT
-// Firebase SDK 로드 완료 후 앱 시작
-window.addEventListener('load', function() {
-  // Firebase SDK 재시도 (CDN 로드 완료 시점)
-  if (!fbDb && typeof firebase !== 'undefined') {
-    try {
-      // 이미 초기화됐으면 기존 앱 사용
-      var apps = firebase.apps;
-      if (apps && apps.length > 0) {
-        fbDb = apps[0].database();
-      } else {
-        firebase.initializeApp(FB_CONFIG);
-        fbDb = firebase.database();
-      }
-      if (fbDb) fbDb.ref('.info/connected').on('value', function(snap) {
-        var badge = document.getElementById('fb-status-badge');
-        if (badge) {
-          badge.textContent = snap.val() ? '🟢 동기화 중' : '🔴 오프라인';
-          badge.style.color = snap.val() ? 'var(--green)' : 'var(--red)';
-        }
-      });
-    } catch(e) { console.warn('Firebase 재초기화 실패:', e); }
-  }
-  fbInitAndLoad();
-});
 
-
-</script>
-</body>
-</html
 
 // ═══════════════════════════════════════════════
 // FIREBASE 실시간 동기화
@@ -5919,4 +5891,33 @@ fbInitAndLoad();
   }
 })();
 
->
+// Firebase SDK 로드 완료 후 앱 시작
+window.addEventListener('load', function() {
+  // Firebase SDK 재시도 (CDN 로드 완료 시점)
+  if (!fbDb && typeof firebase !== 'undefined') {
+    try {
+      // 이미 초기화됐으면 기존 앱 사용
+      var apps = firebase.apps;
+      if (apps && apps.length > 0) {
+        fbDb = apps[0].database();
+      } else {
+        firebase.initializeApp(FB_CONFIG);
+        fbDb = firebase.database();
+      }
+      if (fbDb) fbDb.ref('.info/connected').on('value', function(snap) {
+        var badge = document.getElementById('fb-status-badge');
+        if (badge) {
+          badge.textContent = snap.val() ? '🟢 동기화 중' : '🔴 오프라인';
+          badge.style.color = snap.val() ? 'var(--green)' : 'var(--red)';
+        }
+      });
+    } catch(e) { console.warn('Firebase 재초기화 실패:', e); }
+  }
+  fbInitAndLoad();
+});
+
+
+
+</script>
+</body>
+</html>
