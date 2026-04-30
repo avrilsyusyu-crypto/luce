@@ -3426,17 +3426,17 @@ function getUnitPrice(s) {
   return Math.round(raw / 100) * 100; // 100원 단위 반올림
 }
 
-// 전달 달력 기준 수업 가능 횟수 (공휴일·휴무 제외)
+// 청구월 달력 기준 수업 가능 횟수 (공휴일·휴무 제외)
+// 예: 5월 원비 → 5월 달력에서 해당 요일 수업 횟수 계산
 function getStudentSessions(s) {
   const mo = getWonbiKey();
   if (!mo) return getBaseSessions(s);
-  const prevMo = getPrevMonth(mo);
-  const [year, month] = prevMo.split('-').map(Number);
+  const [year, month] = mo.split('-').map(Number);
   const daysInMonth   = new Date(year, month, 0).getDate();
   const DOW_MAP = {0:'일',1:'월',2:'화',3:'수',4:'목',5:'금',6:'토'};
   let count = 0;
   for (let d = 1; d <= daysInMonth; d++) {
-    const date = prevMo + '-' + String(d).padStart(2,'0');
+    const date = mo + '-' + String(d).padStart(2,'0');
     if (isSchoolClosed(date)) continue;
     const dow = DOW_MAP[new Date(date + 'T00:00:00').getDay()];
     if (s.days && s.days[dow]) count++;
@@ -3452,19 +3452,18 @@ function getActualSessions(s, rec) {
 }
 
 function calcTotal(s, rec) {
-  const unit   = getUnitPrice(s);          // 1회당 단가
-  const actual = getActualSessions(s, rec); // 실제 수업 횟수
-  return Math.max(0, actual * unit - getDiscount(s) + (rec ? rec.textbook || 0 : 0));
+  const unit     = getUnitPrice(s);       // 1회당 단가
+  const possible = getStudentSessions(s); // 청구월 달력 기준 수업 횟수 (결석 차감 없음)
+  return Math.max(0, possible * unit - getDiscount(s) + (rec ? rec.textbook || 0 : 0));
 }
 
 // 수업 회차 정보 반환
 function getExtraInfo(s, rec) {
   const baseSess = getBaseSessions(s);
   const unit     = getUnitPrice(s);
-  const possible = getStudentSessions(s);           // 달력 기준
-  const actual   = getActualSessions(s, rec);       // 실제 (결석 차감)
-  const diff     = actual - baseSess;
-  return { possible, actual, baseSess, diff, extraAmt: diff * unit };
+  const possible = getStudentSessions(s); // 청구월 달력 기준
+  const diff     = possible - baseSess;   // 기준 대비 초과/미달
+  return { possible, actual: possible, baseSess, diff, extraAmt: diff * unit };
 }
 
 function renderWonbiRow(mo, sid) {
@@ -3478,20 +3477,16 @@ function renderWonbiRow(mo, sid) {
   // 결석 차감 표시 → 실제 회차 기반 증감 표시
   const { possible, actual, baseSess, diff } = getExtraInfo(s, rec);
   if (el(`wb-absdec-${sid}`)) {
-    if (diff < 0) {
-      // 결석으로 인한 미달
-      el(`wb-absdec-${sid}`).textContent = `${actual}회 / ${possible}회`;
+    const { possible: pos2, diff: diff2, baseSess: base2 } = getExtraInfo(s, rec);
+    if (diff2 < 0) {
+      el(`wb-absdec-${sid}`).textContent = `${pos2}회 / ${base2}회`;
       el(`wb-absdec-${sid}`).style.color = 'var(--red)';
-      el(`wb-absdec-${sid}`).title = `기준 ${baseSess}회, 달력 ${possible}회 중 ${actual}회 수업`;
-    } else if (diff > 0) {
-      // 달력 기준 초과
-      el(`wb-absdec-${sid}`).textContent = `${actual}회 (+${diff})`;
+    } else if (diff2 > 0) {
+      el(`wb-absdec-${sid}`).textContent = `${pos2}회 (+${diff2})`;
       el(`wb-absdec-${sid}`).style.color = 'var(--orange)';
-      el(`wb-absdec-${sid}`).title = `기준 ${baseSess}회 초과`;
     } else {
-      el(`wb-absdec-${sid}`).textContent = `${actual}회`;
+      el(`wb-absdec-${sid}`).textContent = `${pos2}회`;
       el(`wb-absdec-${sid}`).style.color = 'var(--muted)';
-      el(`wb-absdec-${sid}`).title = `기준 ${baseSess}회`;
     }
   }
   const { extraAmt } = getExtraInfo(s, rec);
@@ -3525,13 +3520,14 @@ function renderWonbi() {
       <td><span class="tag tag-blue" style="font-size:11px">${s.cls}</span></td>
       <td style="font-family:'DM Mono',monospace;font-size:12px">${getFinal(s).toLocaleString()}</td>
       <td style="text-align:center;">
-        <span style="font-family:'DM Mono',monospace;font-size:12px;${actual>baseSess?'color:var(--orange);font-weight:700':'color:var(--muted)'}">${actual}회</span>
+        <span style="font-family:'DM Mono',monospace;font-size:12px;${actual>baseSess?'color:var(--orange);font-weight:700':'color:${possible < baseSess ? 'var(--red)' : possible > baseSess ? 'var(--orange)' : 'var(--text)'}">${possible}회</span>
         <span style="font-size:11px;color:var(--muted)"> / ${baseSess}</span>
       </td>
       <td style="text-align:center;">
-        ${extraAmt > 0
-          ? `<span style="color:var(--orange);font-weight:700;font-size:12px;font-family:'DM Mono',monospace">+${extraAmt.toLocaleString()}</span>
-             <div style="font-size:10px;color:var(--muted)">${extra}회 추가</div>`
+        ${diff > 0
+          ? `<span style="color:var(--orange);font-weight:700;font-size:12px;">${(diff*unit).toLocaleString()}원</span><div style="font-size:10px;color:var(--muted)">${diff}회 초과</div>`
+          : diff < 0
+          ? `<span style="color:var(--red);font-weight:700;font-size:12px;">${(diff*unit).toLocaleString()}원</span><div style="font-size:10px;color:var(--muted)">${Math.abs(diff)}회 미달</div>`
           : `<span style="color:var(--muted);font-size:12px">—</span>`}
       </td>
       <td>
