@@ -1890,6 +1890,12 @@ function switchTab(name, btn) {
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById('tab-' + name).classList.add('active');
+  // 탭별 렌더링
+  if (name === 'wonbi')   { renderWonbi(); }
+  if (name === 'att')     { renderAttendance(); }
+  if (name === 'monthly') { renderMonthly(); }
+  if (name === 'student') { renderStudentTable(); }
+  if (name === 'grades')  { initGradeTab(); }
 }
 
 function closeModal(id) {
@@ -3575,7 +3581,7 @@ function renderWonbi() {
     const rec    = getWonbiRecord(mo, s.id);
     const unit   = getUnitPrice(s);
     const total  = calcTotal(s, rec);
-    const { actual, extra, extraAmt, baseSess } = getExtraInfo(s);
+    const { possible, diff, extraAmt, baseSess } = getExtraInfo(s, rec);
     const iStyle   = `background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:3px 6px;color:var(--text);font-size:12px;text-align:center;`;
 
     return `<tr>
@@ -3616,8 +3622,8 @@ function renderWonbi() {
         <span id="wb-paid-${s.id}" class="${rec.paid?'wb-paid':'wb-unpaid'}"
           style="cursor:pointer;font-size:12px;padding:3px 8px;border-radius:6px;border:1px solid ${rec.paid?'rgba(62,207,142,0.4)':'rgba(247,95,95,0.3)'};background:${rec.paid?'rgba(62,207,142,0.1)':'rgba(247,95,95,0.08)'};"
           onclick="setWonbiField('${mo}',${s.id},'paid',!${rec.paid})"
-          title="${rec.paid ? (() => { var h=getPayHistory(s.id).find(r=>r.mo===mo); return h?h.paidDate+' 납부':'납부완료'; })() : '클릭하여 납부 처리'}">
-          ${rec.paid ? '✅ ' + (() => { var h=getPayHistory(s.id).find(r=>r.mo===mo); return h?h.paidDate:'납부'; })() : '미납'}
+          title="${rec.paid ? (getPayHistory(s.id).find(r=>r.mo===mo)||{}).paidDate||'납부완료' : '클릭하여 납부 처리'}">
+          ${rec.paid ? '✅ ' + ((getPayHistory(s.id).find(r=>r.mo===mo)||{}).paidDate||'납부') : '미납'}
         </span>
       </td>
       <td>
