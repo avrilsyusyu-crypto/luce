@@ -3586,7 +3586,7 @@ function renderWonbi() {
       <td><span class="tag tag-blue" style="font-size:11px">${s.cls}</span></td>
       <td style="font-family:'DM Mono',monospace;font-size:12px">${getFinal(s).toLocaleString()}</td>
       <td style="text-align:center;">
-        <span style="font-family:'DM Mono',monospace;font-size:12px;${actual>baseSess?'color:var(--orange);font-weight:700':'color:${possible < baseSess ? 'var(--red)' : possible > baseSess ? 'var(--orange)' : 'var(--text)'}">${possible}회</span>
+        <span style="font-family:'DM Mono',monospace;font-size:12px;font-weight:700;color:${possible<baseSess?'var(--red)':possible>baseSess?'var(--orange)':'var(--text)'}">${possible}회</span>
         <span style="font-size:11px;color:var(--muted)"> / ${baseSess}</span>
       </td>
       <td style="text-align:center;">
