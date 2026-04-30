@@ -1515,6 +1515,100 @@ input::placeholder { color: var(--muted); }
 <script>
 
 // ═══════════════════════════════════════════════
+// LOGIN
+// ═══════════════════════════════════════════════
+var _LK = 'luche_auth_v1';
+var _LD = 30;
+// 비밀번호 인코딩 (btoa)
+var _LP = atob('OTc0OQ==');
+
+function checkLoginState() {
+  try {
+    var s = JSON.parse(localStorage.getItem(_LK) || 'null');
+    if (!s || !s.ok) return false;
+    if (Date.now() - s.ts > _LD * 86400000) {
+      localStorage.removeItem(_LK);
+      return false;
+    }
+    return true;
+  } catch(e) { return false; }
+}
+
+function showApp() {
+  var ls = document.getElementById('login-screen');
+  if (ls) ls.style.display = 'none';
+}
+
+function doLogin() {
+  var pw  = document.getElementById('login-pw').value;
+  var err = document.getElementById('login-err');
+  if (!pw) { err.textContent = '비밀번호를 입력해주세요'; return; }
+  if (pw === _LP) {
+    localStorage.setItem(_LK, JSON.stringify({ok:true, ts:Date.now()}));
+    showApp();
+    err.textContent = '';
+  } else {
+    err.textContent = '비밀번호가 맞지 않아요 ❌';
+    document.getElementById('login-pw').value = '';
+    document.getElementById('login-pw').focus();
+  }
+}
+
+// ── 엑셀 모의고사 성적 초기 데이터
+(function() {
+  var existing = localStorage.getItem('luche_grades_v1');
+  if (!existing || existing === '{}') {
+    localStorage.setItem('luche_grades_v1', JSON.stringify({"mid":{"17":[{"year":2025,"term":"2-mid","math":75.3,"gradeVal":null,"avg":null,"rank":"","memo":"모의고사 8회 평균 75.3","id":1700001}]},"high":{"3":[{"year":2025,"term":"2-mid","math":53.0,"gradeVal":null,"avg":null,"rank":"","memo":"모의고사 8회 평균 53.0","id":300001}],"19":[{"year":2025,"term":"2-mid","math":83.2,"gradeVal":null,"avg":null,"rank":"","memo":"모의고사 8회 평균 83.2","id":1900001}]}}));
+  } else {
+    try {
+      var cur = JSON.parse(existing);
+      var imported = {"mid":{"17":[{"year":2025,"term":"2-mid","math":75.3,"gradeVal":null,"avg":null,"rank":"","memo":"모의고사 8회 평균 75.3","id":1700001}]},"high":{"3":[{"year":2025,"term":"2-mid","math":53.0,"gradeVal":null,"avg":null,"rank":"","memo":"모의고사 8회 평균 53.0","id":300001}],"19":[{"year":2025,"term":"2-mid","math":83.2,"gradeVal":null,"avg":null,"rank":"","memo":"모의고사 8회 평균 83.2","id":1900001}]}};
+      ['mid','high'].forEach(function(type) {
+        if (!cur[type]) cur[type] = {};
+        Object.keys(imported[type] || {}).forEach(function(sid) {
+          if (!cur[type][sid]) cur[type][sid] = [];
+          imported[type][sid].forEach(function(rec) {
+            if (!cur[type][sid].find(function(r){ return r.id===rec.id; })) cur[type][sid].push(rec);
+          });
+        });
+      });
+      localStorage.setItem('luche_grades_v1', JSON.stringify(cur));
+    } catch(e) {}
+  }
+})();
+
+// INIT
+// Firebase SDK 로드 완료 후 앱 시작
+window.addEventListener('load', function() {
+  // Firebase SDK 재시도 (CDN 로드 완료 시점)
+  if (!fbDb && typeof firebase !== 'undefined') {
+    try {
+      // 이미 초기화됐으면 기존 앱 사용
+      var apps = firebase.apps;
+      if (apps && apps.length > 0) {
+        fbDb = apps[0].database();
+      } else {
+        firebase.initializeApp(FB_CONFIG);
+        fbDb = firebase.database();
+      }
+      if (fbDb) fbDb.ref('.info/connected').on('value', function(snap) {
+        var badge = document.getElementById('fb-status-badge');
+        if (badge) {
+          badge.textContent = snap.val() ? '🟢 동기화 중' : '🔴 오프라인';
+          badge.style.color = snap.val() ? 'var(--green)' : 'var(--red)';
+        }
+      });
+    } catch(e) { console.warn('Firebase 재초기화 실패:', e); }
+  }
+  fbInitAndLoad();
+});
+
+
+</script>
+</body>
+</html
+
+// ═══════════════════════════════════════════════
 // FIREBASE 실시간 동기화
 // ═══════════════════════════════════════════════
 var FB_CONFIG = {
@@ -5825,96 +5919,4 @@ fbInitAndLoad();
   }
 })();
 
-// ═══════════════════════════════════════════════
-// LOGIN
-// ═══════════════════════════════════════════════
-var _LK = 'luche_auth_v1';
-var _LD = 30;
-// 비밀번호 인코딩 (btoa)
-var _LP = atob('OTc0OQ==');
-
-function checkLoginState() {
-  try {
-    var s = JSON.parse(localStorage.getItem(_LK) || 'null');
-    if (!s || !s.ok) return false;
-    if (Date.now() - s.ts > _LD * 86400000) {
-      localStorage.removeItem(_LK);
-      return false;
-    }
-    return true;
-  } catch(e) { return false; }
-}
-
-function showApp() {
-  var ls = document.getElementById('login-screen');
-  if (ls) ls.style.display = 'none';
-}
-
-function doLogin() {
-  var pw  = document.getElementById('login-pw').value;
-  var err = document.getElementById('login-err');
-  if (!pw) { err.textContent = '비밀번호를 입력해주세요'; return; }
-  if (pw === _LP) {
-    localStorage.setItem(_LK, JSON.stringify({ok:true, ts:Date.now()}));
-    showApp();
-    err.textContent = '';
-  } else {
-    err.textContent = '비밀번호가 맞지 않아요 ❌';
-    document.getElementById('login-pw').value = '';
-    document.getElementById('login-pw').focus();
-  }
-}
-
-// ── 엑셀 모의고사 성적 초기 데이터
-(function() {
-  var existing = localStorage.getItem('luche_grades_v1');
-  if (!existing || existing === '{}') {
-    localStorage.setItem('luche_grades_v1', JSON.stringify({"mid":{"17":[{"year":2025,"term":"2-mid","math":75.3,"gradeVal":null,"avg":null,"rank":"","memo":"모의고사 8회 평균 75.3","id":1700001}]},"high":{"3":[{"year":2025,"term":"2-mid","math":53.0,"gradeVal":null,"avg":null,"rank":"","memo":"모의고사 8회 평균 53.0","id":300001}],"19":[{"year":2025,"term":"2-mid","math":83.2,"gradeVal":null,"avg":null,"rank":"","memo":"모의고사 8회 평균 83.2","id":1900001}]}}));
-  } else {
-    try {
-      var cur = JSON.parse(existing);
-      var imported = {"mid":{"17":[{"year":2025,"term":"2-mid","math":75.3,"gradeVal":null,"avg":null,"rank":"","memo":"모의고사 8회 평균 75.3","id":1700001}]},"high":{"3":[{"year":2025,"term":"2-mid","math":53.0,"gradeVal":null,"avg":null,"rank":"","memo":"모의고사 8회 평균 53.0","id":300001}],"19":[{"year":2025,"term":"2-mid","math":83.2,"gradeVal":null,"avg":null,"rank":"","memo":"모의고사 8회 평균 83.2","id":1900001}]}};
-      ['mid','high'].forEach(function(type) {
-        if (!cur[type]) cur[type] = {};
-        Object.keys(imported[type] || {}).forEach(function(sid) {
-          if (!cur[type][sid]) cur[type][sid] = [];
-          imported[type][sid].forEach(function(rec) {
-            if (!cur[type][sid].find(function(r){ return r.id===rec.id; })) cur[type][sid].push(rec);
-          });
-        });
-      });
-      localStorage.setItem('luche_grades_v1', JSON.stringify(cur));
-    } catch(e) {}
-  }
-})();
-
-// INIT
-// Firebase SDK 로드 완료 후 앱 시작
-window.addEventListener('load', function() {
-  // Firebase SDK 재시도 (CDN 로드 완료 시점)
-  if (!fbDb && typeof firebase !== 'undefined') {
-    try {
-      // 이미 초기화됐으면 기존 앱 사용
-      var apps = firebase.apps;
-      if (apps && apps.length > 0) {
-        fbDb = apps[0].database();
-      } else {
-        firebase.initializeApp(FB_CONFIG);
-        fbDb = firebase.database();
-      }
-      if (fbDb) fbDb.ref('.info/connected').on('value', function(snap) {
-        var badge = document.getElementById('fb-status-badge');
-        if (badge) {
-          badge.textContent = snap.val() ? '🟢 동기화 중' : '🔴 오프라인';
-          badge.style.color = snap.val() ? 'var(--green)' : 'var(--red)';
-        }
-      });
-    } catch(e) { console.warn('Firebase 재초기화 실패:', e); }
-  }
-  fbInitAndLoad();
-});
-
-
-</script>
-</body>
-</html>
+>
