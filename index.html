@@ -1471,10 +1471,14 @@ input::placeholder { color: var(--muted); }
 <div class="modal-overlay hidden" id="modal-makeup">
   <div class="modal" style="max-width:380px;">
     <div class="modal-title">
-      📅 보충 날짜 지정
+      <span id="makeup-modal-title">📅 보충 날짜 지정</span>
       <button class="modal-close" onclick="closeModal('modal-makeup')">✕</button>
     </div>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:16px;" id="makeup-modal-desc"></p>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:8px;" id="makeup-modal-desc"></p>
+    <div id="makeup-current-info" style="display:none;background:var(--surface2);border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:12px;align-items:center;justify-content:space-between;">
+      <span>현재 보충: <strong id="makeup-current-date" style="color:var(--accent);"></strong></span>
+      <button class="btn btn-sm" onclick="cancelMakeup()" style="background:rgba(214,59,59,0.1);color:var(--red);border:1px solid rgba(214,59,59,0.3);font-size:11px;padding:3px 8px;">보충 취소</button>
+    </div>
     <!-- 다음 수업 날 빠른 선택 -->
     <div id="makeup-next-btns" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;"></div>
     <div class="field">
@@ -2882,8 +2886,32 @@ function openMakeupModal(origYmd, sid) {
   _makeupOrigYmd = origYmd;
   _makeupSid     = sid;
   const s = students.find(st => st.id === sid);
+
+  // 기존 보충 날짜 확인
+  const ms = loadMakeupSchedule();
+  let existingMakeupDate = null;
+  Object.keys(ms).forEach(function(makeupYmd) {
+    if (ms[makeupYmd][sid] && ms[makeupYmd][sid].origDate === origYmd) {
+      existingMakeupDate = makeupYmd;
+    }
+  });
+
+  // 모달 제목 + 현재 보충 정보 표시
+  const titleEl = document.getElementById('makeup-modal-title');
+  const curInfoEl = document.getElementById('makeup-current-info');
+  const curDateEl = document.getElementById('makeup-current-date');
+  if (existingMakeupDate) {
+    if (titleEl) titleEl.textContent = '📅 보충 날짜 변경';
+    if (curInfoEl) curInfoEl.style.display = 'flex';
+    if (curDateEl) curDateEl.textContent = existingMakeupDate.slice(5).replace('-','/') + ' (' + getDayOfWeek(existingMakeupDate) + ')';
+  } else {
+    if (titleEl) titleEl.textContent = '📅 보충 날짜 지정';
+    if (curInfoEl) curInfoEl.style.display = 'none';
+  }
+
   document.getElementById('makeup-modal-desc').textContent =
-    (s?.name || '') + ' — ' + origYmd + ' 결석 보충 날짜를 지정하세요.\n(다음 수업 시 연장 진행 시, 보충 날짜 = 다음 수업 날짜)';  
+    (s?.name || '') + ' — ' + origYmd + ' 결석' +
+    (existingMakeupDate ? ' → 보충 날짜 변경' : ' → 보충 날짜 지정');  
 
   // 다음 수업 날짜 3개 추천 (학생 수업 요일 기준)
   const DOW_MAP = {0:'일',1:'월',2:'화',3:'수',4:'목',5:'금',6:'토'};
@@ -2923,11 +2951,39 @@ function openMakeupModal(origYmd, sid) {
   selectCalDateG(defaultYmd);
   document.getElementById('modal-makeup').classList.remove('hidden');
 }
+
+function cancelMakeup() {
+  if (!_makeupOrigYmd || !_makeupSid) return;
+  const ms = loadMakeupSchedule();
+  // 해당 origYmd의 보충 기록 모두 제거
+  Object.keys(ms).forEach(function(makeupYmd) {
+    if (ms[makeupYmd][_makeupSid] && ms[makeupYmd][_makeupSid].origDate === _makeupOrigYmd) {
+      delete ms[makeupYmd][_makeupSid];
+      if (Object.keys(ms[makeupYmd]).length === 0) delete ms[makeupYmd];
+    }
+  });
+  saveMakeupSchedule(ms);
+  closeModal('modal-makeup');
+  renderAttendance();
+  toast('🗑 보충 날짜가 취소됐어요.');
+}
+
 function confirmMakeupDate() {
   const d = document.getElementById('makeup-date-input').value;
   if (!d) { toast('⚠️ 날짜를 선택해주세요'); return; }
+  // 기존 보충 날짜 있으면 먼저 제거
+  const ms = loadMakeupSchedule();
+  Object.keys(ms).forEach(function(mYmd) {
+    if (ms[mYmd][_makeupSid] && ms[mYmd][_makeupSid].origDate === _makeupOrigYmd) {
+      delete ms[mYmd][_makeupSid];
+      if (Object.keys(ms[mYmd]).length === 0) delete ms[mYmd];
+    }
+  });
+  saveMakeupSchedule(ms);
+  // 새 날짜로 저장
   setMakeup(_makeupOrigYmd, _makeupSid, d);
   closeModal('modal-makeup');
+  toast('✅ 보충 날짜가 변경됐어요!');
 }
 
 
@@ -3093,15 +3149,32 @@ function renderAttendance() {
   function makeCheckRow(s, isMakeup, origDate) {
     const status = dayAtt[s.id] || (isMakeup ? 'makeup' : 'none');
     const sched  = isMakeup ? null : s.days[dow];
-    const timeStr = sched ? `${sched.in}~${sched.out}` : '보충';
+    const timeStr = sched
+      ? `${sched.in}~${sched.out}`
+      : origDate
+        ? `보충 — ${origDate.slice(5).replace('-','/')} 결석`
+        : '보충';
+    // 기존 보충 날짜 확인 (결석 학생용 - 보충 지정된 경우)
+    const ms0 = loadMakeupSchedule();
+    let existMakeupYmd = null;
+    if (!isMakeup) {
+      Object.keys(ms0).forEach(function(mYmd) {
+        if (ms0[mYmd][s.id] && ms0[mYmd][s.id].origDate === ymd) existMakeupYmd = mYmd;
+      });
+    }
     const nameExtra = isMakeup
-      ? `<span style="font-size:10px;background:rgba(79,142,247,0.2);color:var(--accent);border-radius:10px;padding:1px 6px;margin-left:4px;">보충(연장) ${origDate ? origDate.slice(5).replace('-','/')+' 결석' : ''}</span>`
-      : '';
+      ? `<span style="font-size:10px;background:rgba(79,142,247,0.2);color:var(--accent);border-radius:10px;padding:1px 6px;margin-left:4px;">📅 ${origDate ? origDate.slice(5).replace('-','/') + '(' + getDayOfWeek(origDate) + ') 결석 보충' : '보충'}</span>`
+      : existMakeupYmd
+        ? `<span style="font-size:10px;background:rgba(26,158,110,0.15);color:var(--green);border-radius:10px;padding:1px 6px;margin-left:4px;">→보충 ${existMakeupYmd.slice(5).replace('-','/')}</span>`
+        : '';
     const removeMakeupBtn = isMakeup
       ? `<button onclick="removeMakeup('${ymd}',${s.id})" title="보충 삭제"
           style="padding:3px 6px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:10px;cursor:pointer;">✕</button>`
-      : `<button onclick="openMakeupModal('${ymd}',${s.id})" title="보충 날짜 지정"
-          style="padding:3px 6px;border-radius:6px;border:1px solid rgba(79,142,247,0.3);background:rgba(79,142,247,0.08);color:var(--accent);font-size:10px;cursor:pointer;${status==='absent'?'':'display:none'}">📅</button>`;
+      : existMakeupYmd
+        ? `<button onclick="openMakeupModal('${ymd}',${s.id})" title="보충 날짜 변경"
+            style="padding:3px 6px;border-radius:6px;border:1px solid rgba(26,158,110,0.4);background:rgba(26,158,110,0.1);color:var(--green);font-size:10px;cursor:pointer;">📅 변경</button>`
+        : `<button onclick="openMakeupModal('${ymd}',${s.id})" title="보충 날짜 지정"
+            style="padding:3px 6px;border-radius:6px;border:1px solid rgba(79,142,247,0.3);background:rgba(79,142,247,0.08);color:var(--accent);font-size:10px;cursor:pointer;${status==='absent'?'':'display:none'}">📅</button>`;
 
     return `<div style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid rgba(42,47,62,0.4);transition:background .15s;${isMakeup?'background:rgba(79,142,247,0.04);':''}"
       onmouseover="this.style.background='rgba(79,142,247,0.07)'" onmouseout="this.style.background='${isMakeup?'rgba(79,142,247,0.04)':''}'">
