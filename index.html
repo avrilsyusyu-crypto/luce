@@ -769,6 +769,76 @@ input::placeholder { color: var(--muted); }
     <!-- 문자 미리보기 영역 -->
     <div id="wb-msg-area"></div>
 
+    <!-- ══ 특강 (특별 교육비) ════════════════════════════════ -->
+    <div class="card" style="margin-top:16px;">
+      <div class="card-title"><span class="dot" style="background:var(--purple)"></span> 🎓 특강 (특별 교육비)</div>
+
+      <!-- 특강 기간 설정 -->
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:14px;">
+        <div class="field" style="margin:0;min-width:160px;">
+          <label>특강 시작일</label>
+          <div class="cal-wrap">
+            <button class="cal-input-btn" id="sp-start-btn" onclick="openCal('sp-start',renderSpecial,event)" style="font-size:13px;padding:7px 11px;">
+              <span>날짜 선택</span>
+            </button>
+            <input type="hidden" id="sp-start" value="">
+          </div>
+        </div>
+        <div class="field" style="margin:0;min-width:160px;">
+          <label>특강 종료일</label>
+          <div class="cal-wrap">
+            <button class="cal-input-btn" id="sp-end-btn" onclick="openCal('sp-end',renderSpecial,event)" style="font-size:13px;padding:7px 11px;">
+              <span>날짜 선택</span>
+            </button>
+            <input type="hidden" id="sp-end" value="">
+          </div>
+        </div>
+        <div class="field" style="margin:0;">
+          <label>주 횟수</label>
+          <select id="sp-weekly" onchange="renderSpecial()" style="padding:7px 10px;font-family:inherit;font-size:13px;border:1px solid var(--border);border-radius:8px;background:var(--surface);">
+            <option value="3">주 3회</option>
+            <option value="2">주 2회</option>
+            <option value="4">주 4회</option>
+            <option value="5">주 5회</option>
+          </select>
+        </div>
+        <div class="field" style="margin:0;">
+          <label>기준 금액 (3주 3일 / 9회)</label>
+          <input type="number" id="sp-base-price" value="110000" step="10000"
+            oninput="renderSpecial()"
+            style="width:120px;padding:7px 10px;font-family:inherit;font-size:13px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);">
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="saveSpecialConfig()" style="align-self:flex-end;padding:7px 14px;">💾 설정 저장</button>
+      </div>
+
+      <!-- 단가 안내 -->
+      <div id="sp-unit-info" style="font-size:12px;color:var(--muted);margin-bottom:14px;"></div>
+
+      <!-- 학생 선택 + 목록 -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
+        <div style="font-size:13px;font-weight:700;">특강 수강생</div>
+        <button class="btn btn-ghost btn-sm" onclick="openSpecialEnroll()" style="font-size:12px;">+ 학생 추가</button>
+        <button class="btn btn-ghost btn-sm" onclick="generateSpecialMsg()" style="font-size:12px;color:var(--purple);border-color:var(--purple);">📋 원비 문자 생성</button>
+      </div>
+      <div id="sp-student-list"></div>
+
+      <!-- 문자 미리보기 -->
+      <div id="sp-msg-area" style="margin-top:14px;"></div>
+    </div>
+
+    <!-- 특강 학생 추가 모달 -->
+    <div id="modal-special-enroll" class="modal-overlay hidden">
+      <div class="modal" style="max-width:360px;">
+        <div class="modal-title">🎓 특강 수강생 추가
+          <button class="modal-close" onclick="closeModal('modal-special-enroll')">✕</button>
+        </div>
+        <div style="max-height:360px;overflow-y:auto;" id="sp-enroll-list"></div>
+        <div class="modal-footer">
+          <button class="btn btn-primary" onclick="confirmSpecialEnroll()">추가</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 
 
@@ -1895,7 +1965,7 @@ function switchTab(name, btn) {
   btn.classList.add('active');
   document.getElementById('tab-' + name).classList.add('active');
   // 탭별 렌더링
-  if (name === 'wonbi')   { renderWonbi(); }
+  if (name === 'wonbi')   { renderWonbi(); loadSpecialConfig(); renderSpecial(); }
   if (name === 'att')     { renderAttendance(); }
   if (name === 'monthly') { renderMonthly(); }
   if (name === 'student') { renderStudentTable(); }
@@ -3228,11 +3298,34 @@ function renderAttendance() {
         <div class="card-title"><span class="dot" style="background:var(--red)"></span> 특이 사항</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           ${notPresent.map(s => {
-            const st = dayAtt[s.id];
+            const st  = dayAtt[s.id];
             const col = st==='absent'?'var(--red)':st==='extend'?'var(--purple)':st==='makeup'?'var(--accent)':'var(--orange)';
+            // 보충 예정 날짜 찾기
+            const ms2 = loadMakeupSchedule();
+            let makeupYmd = null;
+            Object.keys(ms2).forEach(function(mYmd) {
+              if (ms2[mYmd][s.id] && ms2[mYmd][s.id].origDate === ymd) makeupYmd = mYmd;
+            });
+            // 보충 수업인 경우 결석 원본 날짜
+            let origAbsDate = null;
+            if (st === 'makeup' || st === 'extend') {
+              Object.keys(ms2).forEach(function(mYmd) {
+                if (mYmd === ymd && ms2[mYmd][s.id]) origAbsDate = ms2[mYmd][s.id].origDate;
+              });
+            }
+            const subInfo = st === 'absent'
+              ? makeupYmd
+                ? `보충예정 <strong style="color:var(--green)">${makeupYmd.slice(5).replace('-','/')}</strong>`
+                : '보충 미지정'
+              : (origAbsDate
+                ? `${origAbsDate.slice(5).replace('-','/')} 결석분`
+                : s.days[dow] ? s.days[dow].in+'~'+s.days[dow].out : '');
+            const changeBtn = st === 'absent'
+              ? `<button onclick="openMakeupModal('${ymd}',${s.id})" style="font-size:10px;padding:2px 7px;border-radius:5px;border:1px solid ${makeupYmd?'rgba(26,158,110,0.4)':'rgba(79,142,247,0.4)'};background:${makeupYmd?'rgba(26,158,110,0.1)':'rgba(79,142,247,0.08)'};color:${makeupYmd?'var(--green)':'var(--accent)'};cursor:pointer;margin-left:6px;">${makeupYmd?'📅 변경':'📅 지정'}</button>`
+              : '';
             return `<div style="background:rgba(255,255,255,0.04);border:1px solid ${col}44;border-left:3px solid ${col};border-radius:8px;padding:8px 14px;">
-              <div style="font-weight:700;font-size:13px;">${s.name} <span style="color:${col};font-size:11px;">${ATT_LABELS[st]}</span></div>
-              <div style="font-size:11px;color:var(--muted)">${s.grade} · ${s.days[dow].in}~${s.days[dow].out}</div>
+              <div style="font-weight:700;font-size:13px;">${s.name} <span style="color:${col};font-size:11px;">${ATT_LABELS[st]}</span>${changeBtn}</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:2px;">${s.grade} · ${subInfo}</div>
             </div>`;
           }).join('')}
         </div>
@@ -5766,6 +5859,219 @@ function initGradeTab() {
 // ═══════════════════════════════════════════════
 // RENDER ALL
 // ═══════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════
+// 특강 (특별 교육비)
+// ═══════════════════════════════════════════════
+var SP_KEY = 'luche_special_v1';
+
+function loadSpecialData() {
+  try { return JSON.parse(localStorage.getItem(SP_KEY) || '{}'); } catch(e) { return {}; }
+}
+function saveSpecialData(d) { localStorage.setItem(SP_KEY, JSON.stringify(d)); }
+
+// 특강 기간 내 수업 가능 회차 계산 (공휴일 제외, 주N회 기준)
+function calcSpecialSessions(startYmd, endYmd, weekly) {
+  if (!startYmd || !endYmd) return 0;
+  var DOW_MAP = {0:'일',1:'월',2:'화',3:'수',4:'목',5:'금',6:'토'};
+  // 주N회: 월~금 중 앞에서 N개 요일 사용 (월화수목금 순)
+  var WEEKDAYS = [1,2,3,4,5]; // 월~금
+  var useDays  = WEEKDAYS.slice(0, parseInt(weekly)||3);
+  var count = 0;
+  var d = new Date(startYmd + 'T00:00:00');
+  var end = new Date(endYmd + 'T00:00:00');
+  while (d <= end) {
+    var dow = d.getDay();
+    var ymd = toLocalDateStr(d);
+    if (useDays.indexOf(dow) >= 0 && !isSchoolClosed(ymd)) count++;
+    d.setDate(d.getDate() + 1);
+  }
+  return count;
+}
+
+// 설정 저장
+function saveSpecialConfig() {
+  var d = loadSpecialData();
+  d.config = {
+    start:     document.getElementById('sp-start').value,
+    end:       document.getElementById('sp-end').value,
+    weekly:    parseInt(document.getElementById('sp-weekly').value) || 3,
+    basePrice: parseInt(document.getElementById('sp-base-price').value) || 110000,
+  };
+  saveSpecialData(d);
+  toast('✅ 특강 설정 저장됨');
+}
+
+// 설정 불러오기
+function loadSpecialConfig() {
+  var d = loadSpecialData();
+  var cfg = d.config || {};
+  if (cfg.start) {
+    document.getElementById('sp-start').value = cfg.start;
+    _calTargetId = 'sp-start'; selectCalDateG(cfg.start);
+  }
+  if (cfg.end) {
+    document.getElementById('sp-end').value = cfg.end;
+    _calTargetId = 'sp-end'; selectCalDateG(cfg.end);
+  }
+  if (cfg.weekly) document.getElementById('sp-weekly').value = cfg.weekly;
+  if (cfg.basePrice) document.getElementById('sp-base-price').value = cfg.basePrice;
+}
+
+// 특강 렌더링
+function renderSpecial() {
+  var start     = document.getElementById('sp-start').value;
+  var end       = document.getElementById('sp-end').value;
+  var weekly    = parseInt(document.getElementById('sp-weekly').value) || 3;
+  var basePrice = parseInt(document.getElementById('sp-base-price').value) || 110000;
+  // 3주 3일 = 9회 기준, 단가 = basePrice / 9
+  var stdSessions = 9; // 3주 × 3일 고정 기준
+  var unit        = Math.round(basePrice / stdSessions); // 회당 단가
+  var sessions    = calcSpecialSessions(start, end, weekly);
+
+  // 단가 안내
+  var infoEl = document.getElementById('sp-unit-info');
+  if (infoEl) {
+    infoEl.innerHTML = '기준: 주' + weekly + '회 × 3주 = <strong>9회 / ' +
+      basePrice.toLocaleString() + '원</strong>' +
+      ' · 회당 단가 <strong>' + unit.toLocaleString() + '원</strong>' +
+      (start && end
+        ? ' · 기간 내 실제 <strong>' + sessions + '회</strong> → <strong style="color:var(--purple)">' + (unit * sessions).toLocaleString() + '원</strong>'
+        : ' <span style="color:var(--muted)">(기간 설정 시 실제 회차 계산)</span>');
+  }
+
+  // 수강생 목록
+  var d = loadSpecialData();
+  var enrolled = d.enrolled || {};
+  var listEl   = document.getElementById('sp-student-list');
+  if (!listEl) return;
+
+  var enrolledIds = Object.keys(enrolled).map(Number);
+  if (enrolledIds.length === 0) {
+    listEl.innerHTML = '<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px;">특강 수강생이 없어요. + 학생 추가 버튼을 눌러주세요.</div>';
+    return;
+  }
+
+  var rows = enrolledIds.map(function(sid) {
+    var s = students.find(function(st){ return st.id === sid; });
+    if (!s) return '';
+    var sessCnt = sessions; // 기간 내 전체 회차
+    var fee     = unit * sessCnt;
+    var paid    = enrolled[sid] && enrolled[sid].paid;
+    var paidDate= enrolled[sid] && enrolled[sid].paidDate;
+    return '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;">' +
+      '<div style="min-width:80px;font-weight:700;">' + s.name + '</div>' +
+      '<div style="font-size:12px;color:var(--muted);min-width:80px;">' + s.grade + ' · ' + s.cls + '</div>' +
+      '<div style="font-size:13px;min-width:60px;">' + sessCnt + '회</div>' +
+      '<div style="font-size:14px;font-weight:700;color:var(--purple);min-width:90px;">' + fee.toLocaleString() + '원</div>' +
+      '<span onclick="toggleSpecialPaid(' + sid + ')" style="cursor:pointer;font-size:12px;padding:3px 10px;border-radius:6px;' +
+        (paid ? 'background:rgba(26,158,110,0.1);color:var(--green);border:1px solid rgba(26,158,110,0.3);'
+              : 'background:rgba(214,59,59,0.08);color:var(--red);border:1px solid rgba(214,59,59,0.2);') + '">' +
+        (paid ? '✅ ' + (paidDate||'납부') : '미납') + '</span>' +
+      '<button onclick="removeSpecialStudent(' + sid + ')" style="font-size:11px;padding:2px 8px;background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;">제외</button>' +
+      '</div>';
+  }).join('');
+
+  listEl.innerHTML = rows;
+}
+
+function toggleSpecialPaid(sid) {
+  var d = loadSpecialData();
+  if (!d.enrolled) d.enrolled = {};
+  if (!d.enrolled[sid]) d.enrolled[sid] = {};
+  var paid = d.enrolled[sid].paid;
+  d.enrolled[sid].paid     = !paid;
+  d.enrolled[sid].paidDate = !paid ? toLocalDateStr(new Date()) : null;
+  saveSpecialData(d);
+  renderSpecial();
+}
+
+function removeSpecialStudent(sid) {
+  if (!confirm('특강 수강생에서 제외할까요?')) return;
+  var d = loadSpecialData();
+  if (d.enrolled) delete d.enrolled[sid];
+  saveSpecialData(d);
+  renderSpecial();
+  toast('제외됐어요.');
+}
+
+// 학생 추가 모달
+function openSpecialEnroll() {
+  var d = loadSpecialData();
+  var enrolled = d.enrolled || {};
+  var listEl = document.getElementById('sp-enroll-list');
+  if (!listEl) return;
+  listEl.innerHTML = students.filter(function(s){ return !s.withdrawn; }).map(function(s) {
+    var checked = !!enrolled[s.id];
+    return '<label style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);">' +
+      '<input type="checkbox" class="sp-enroll-chk" data-id="' + s.id + '" ' + (checked?'checked':'') + ' style="width:auto;accent-color:var(--purple);">' +
+      '<span style="font-weight:700;">' + s.name + '</span>' +
+      '<span style="font-size:12px;color:var(--muted);">' + s.grade + ' · ' + s.cls + '</span>' +
+      '</label>';
+  }).join('');
+  document.getElementById('modal-special-enroll').classList.remove('hidden');
+}
+
+function confirmSpecialEnroll() {
+  var d = loadSpecialData();
+  if (!d.enrolled) d.enrolled = {};
+  document.querySelectorAll('.sp-enroll-chk').forEach(function(chk) {
+    var sid = parseInt(chk.dataset.id);
+    if (chk.checked) {
+      if (!d.enrolled[sid]) d.enrolled[sid] = { paid: false, paidDate: null };
+    } else {
+      delete d.enrolled[sid];
+    }
+  });
+  saveSpecialData(d);
+  closeModal('modal-special-enroll');
+  renderSpecial();
+  toast('✅ 수강생 업데이트됨');
+}
+
+// 원비 문자 생성
+function generateSpecialMsg() {
+  var start     = document.getElementById('sp-start').value;
+  var end       = document.getElementById('sp-end').value;
+  var weekly    = parseInt(document.getElementById('sp-weekly').value) || 3;
+  var basePrice = parseInt(document.getElementById('sp-base-price').value) || 110000;
+  var unit      = Math.round(basePrice / 9); // 3주×3일=9회 기준
+  var sessions  = calcSpecialSessions(start, end, weekly);
+
+  var d = loadSpecialData();
+  var enrolled = d.enrolled || {};
+  var ids = Object.keys(enrolled).map(Number);
+  if (ids.length === 0) { toast('⚠️ 수강생을 먼저 추가해주세요'); return; }
+
+  var periodLabel = start && end
+    ? start.slice(5).replace('-','/') + '~' + end.slice(5).replace('-','/')
+    : '특강 기간';
+
+  var msgs = ids.map(function(sid) {
+    var s = students.find(function(st){ return st.id === sid; });
+    if (!s) return '';
+    var fee = unit * sessions;
+    return '안녕하세요, 루체수학입니다.\n' +
+      s.name + ' 학생 ' + periodLabel + ' 특강 교육비 안내드립니다.\n' +
+      '특강 기간: ' + periodLabel + ' (주' + weekly + '회 / ' + sessions + '회)\n' +
+      '특강비: ' + fee.toLocaleString() + '원\n' +
+      '입금계좌: 국민은행 016701-04-207814\n서울페이도 가능합니다.';
+  }).filter(Boolean);
+
+  var areaEl = document.getElementById('sp-msg-area');
+  if (!areaEl) return;
+  areaEl.innerHTML = msgs.map(function(msg, i) {
+    var msgId = 'sp-msg-' + i;
+    return '<div class="fb-msg-card" style="margin-top:10px;">' +
+      '<div class="fb-name">👤 ' + students.find(function(s){ return s.id === ids[i]; })?.name + '</div>' +
+      '<div class="fb-msg-box" id="' + msgId + '">' + msg + '</div>' +
+      '<div class="flex mt8" style="gap:6px;">' +
+      '<button class="btn btn-ghost btn-sm" onclick="copyFbMsg(\'' + msgId + '\')">📋 복사</button>' +
+      '</div></div>';
+  }).join('');
+  toast('✅ ' + ids.length + '명 특강 원비 문자 생성됨');
+}
+
 function renderAll() {
   renderTimetable();
   renderStudentTable();
