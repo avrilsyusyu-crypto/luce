@@ -440,6 +440,9 @@ input::placeholder { color: var(--muted); }
   box-shadow:0 8px 32px rgba(0,0,0,0.18);padding:14px;
   width:min(300px,92vw);
   display:none;
+  max-height:90vh;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
 }
 .cal-popup.open { display:block; }
 @media (max-width:480px) {
@@ -2542,9 +2545,19 @@ function toggleCalendar(e) {
   // 팝업 위치 조정
   var btn = document.getElementById('att-date-btn');
   if (btn) {
-    var rect = btn.getBoundingClientRect();
-    popup.style.top  = (rect.bottom + 4) + 'px';
-    popup.style.left = rect.left + 'px';
+    var rect  = btn.getBoundingClientRect();
+    var popW2 = Math.min(300, window.innerWidth * 0.92);
+    var popH2 = 380;
+    var left2 = rect.left;
+    if (left2 + popW2 > window.innerWidth - 8) left2 = window.innerWidth - popW2 - 8;
+    left2 = Math.max(4, left2);
+    var spaceBelow2 = window.innerHeight - rect.bottom;
+    var top2 = spaceBelow2 >= popH2 ? rect.bottom + 4 : Math.max(8, rect.top - popH2 - 4);
+    popup.style.top      = top2  + 'px';
+    popup.style.left     = left2 + 'px';
+    popup.style.width    = popW2 + 'px';
+    popup.style.maxHeight= Math.min(popH2, window.innerHeight - top2 - 8) + 'px';
+    popup.style.overflowY= 'auto';
   }
   popup.classList.add('open');
   // 팝업 내부 클릭 버블링 차단
@@ -2667,14 +2680,29 @@ function openCal(inputId, onSelectFn, e) {
 
   renderCalPopupGeneric();
 
-  // 팝업 위치
+  // 팝업 위치 — 화면 안에 들어오도록 조정
   var btn = document.getElementById(inputId + '-btn');
   if (btn) {
-    var rect = btn.getBoundingClientRect();
-    var popW = Math.min(300, window.innerWidth * 0.92);
-    var left = Math.min(rect.left, window.innerWidth - popW - 8);
-    popup.style.left = Math.max(4, left) + 'px';
-    popup.style.top  = (rect.bottom + 4) + 'px';
+    var rect   = btn.getBoundingClientRect();
+    var popW   = Math.min(300, window.innerWidth * 0.92);
+    var popH   = 380; // 달력 예상 높이
+    // 좌우 위치
+    var left   = rect.left;
+    if (left + popW > window.innerWidth - 8) left = window.innerWidth - popW - 8;
+    left = Math.max(4, left);
+    // 상하 위치 — 아래에 공간 없으면 위로
+    var spaceBelow = window.innerHeight - rect.bottom;
+    var top;
+    if (spaceBelow >= popH || spaceBelow >= window.innerHeight / 2) {
+      top = rect.bottom + 4;
+    } else {
+      top = Math.max(8, rect.top - popH - 4);
+    }
+    popup.style.left   = left + 'px';
+    popup.style.top    = top  + 'px';
+    popup.style.width  = popW + 'px';
+    popup.style.maxHeight = Math.min(popH, window.innerHeight - top - 8) + 'px';
+    popup.style.overflowY = 'auto';
   }
   popup.classList.add('open');
   popup.onclick = function(ev){ ev.stopPropagation(); };
