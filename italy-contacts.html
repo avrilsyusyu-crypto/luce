@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>이탈리아 비상연락망</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@300;400;500;600&display=swap">
+<style>
+:root{
+  --bg:#F7F6F4; --surface:#FFFFFF; --surface-2:#F0EEEA;
+  --line:#E3DFD9; --line-soft:#EDEAE5;
+  --text:#1C1917; --muted:#78706A;
+  --accent:#A81E22; --accent-soft:#F5E7E5;
+  --done:#3F6B52; --done-soft:#E7EFE9;
+  --shadow:0 1px 2px rgba(28,25,23,.05), 0 8px 24px -16px rgba(28,25,23,.18);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#14110F; --surface:#1E1A18; --surface-2:#262120;
+    --line:#312B28; --line-soft:#262120;
+    --text:#EFEAE5; --muted:#A0968E;
+    --accent:#E2564F; --accent-soft:#33201F;
+    --done:#7FB897; --done-soft:#1E2A23;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.6);
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);
+  font-family:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased}
+.wrap{max-width:760px;margin:0 auto;padding:0 20px 96px}
+
+/* site nav */
+.sitenav{border-bottom:1px solid var(--line);background:var(--surface)}
+.sitenav-in{max-width:760px;margin:0 auto;padding:10px 20px;display:flex;gap:4px;align-items:center;overflow-x:auto;scrollbar-width:none}
+.sitenav-in::-webkit-scrollbar{display:none}
+.sitenav a{font-size:13.5px;text-decoration:none;color:var(--muted);padding:5px 10px;border-radius:2px;white-space:nowrap}
+.sitenav a:hover{color:var(--text);background:var(--surface-2)}
+.sitenav a.on{color:var(--text);font-weight:500;background:var(--surface-2)}
+.sitenav .home{font-family:"Bodoni Moda",Georgia,serif;font-size:15px;color:var(--text);padding-right:10px;margin-right:6px;border-right:1px solid var(--line)}
+
+header.hero{padding:44px 0 26px;border-bottom:1px solid var(--line)}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:"Bodoni Moda",Georgia,serif;font-weight:400;font-size:clamp(34px,7.5vw,52px);line-height:1.05;margin:12px 0 10px}
+h1 em{font-style:italic;color:var(--accent)}
+.lead{color:var(--muted);font-size:15px;margin:0}
+.lead b{color:var(--text);font-weight:500}
+
+section{margin-top:38px}
+.sechead{display:flex;align-items:baseline;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.rank{font-family:"Bodoni Moda",Georgia,serif;font-size:15px;color:var(--accent);white-space:nowrap}
+h2{font-size:20px;font-weight:600;margin:0;letter-spacing:-.01em}
+.when{font-size:13.5px;color:var(--muted);margin:0 0 14px}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:3px;box-shadow:var(--shadow);overflow:hidden}
+.row{display:flex;justify-content:space-between;gap:14px;padding:14px 18px;align-items:center;flex-wrap:wrap}
+.row + .row{border-top:1px solid var(--line-soft)}
+.who{min-width:0;flex:1 1 180px}
+.who .n{font-size:15.5px;font-weight:500;line-height:1.4}
+.who .s{font-size:13px;color:var(--muted);margin-top:2px}
+.who .s code{font-family:"IBM Plex Mono",monospace;font-size:12.5px;background:var(--surface-2);padding:1px 5px;border-radius:2px}
+.dial{flex:none;text-align:right}
+.dial a{
+  font-family:"IBM Plex Mono",monospace;font-size:14px;font-variant-numeric:tabular-nums;
+  color:var(--accent);text-decoration:none;white-space:nowrap;
+  border:1px solid var(--line);padding:6px 11px;border-radius:2px;display:inline-block;background:var(--bg);
+}
+.dial a:hover{border-color:var(--accent);background:var(--accent-soft)}
+.dial .alt{display:block;margin-top:5px}
+.dial .plain{font-family:"IBM Plex Mono",monospace;font-size:13.5px;color:var(--muted);white-space:nowrap}
+.row.big .dial a{font-size:17px;font-weight:500;padding:8px 14px}
+
+.note{
+  margin-top:14px;padding:16px 18px;background:var(--surface);border:1px solid var(--line);
+  border-left:3px solid var(--accent);border-radius:2px;box-shadow:var(--shadow);
+}
+.note p{margin:0 0 7px;font-size:14.5px;color:var(--muted)}
+.note p:last-child{margin-bottom:0}
+.note strong{color:var(--text);font-weight:500}
+
+.steps{margin:0;padding-left:20px;font-size:14.5px;color:var(--muted)}
+.steps li{margin:8px 0}
+.steps b{color:var(--text);font-weight:500}
+.cardbody{padding:16px 18px}
+
+.cards-grid{display:flex;flex-wrap:wrap;gap:6px 14px;font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--muted)}
+.cards-grid a{color:var(--muted);text-decoration:none;border-bottom:1px solid var(--line)}
+.cards-grid a:hover{color:var(--accent)}
+
+footer{margin-top:44px;padding-top:20px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+@media (max-width:560px){
+  .wrap{padding:0 16px 80px}
+  .sitenav-in{padding:9px 16px}
+  .row{padding:13px 15px}
+  .cardbody{padding:15px}
+}
+</style>
+</head>
+<body>
+
+<nav class="sitenav"><div class="sitenav-in">
+  <a class="home" href="italy.html">Italia</a>
+  <a href="italy-schedule.html">일정표</a>
+  <a class="on" href="italy-contacts.html">비상연락망</a>
+  <a href="italy-checklist.html">준비 체크리스트</a>
+</div></nav>
+
+<div class="wrap">
+
+<header class="hero">
+  <div class="eyebrow">2026.09.19 – 09.27 · Roma · Firenze · Venezia</div>
+  <h1>비상<em>연락망</em></h1>
+  <p class="lead">번호를 누르면 바로 전화가 걸립니다. <b>현지 문제는 현지 담당자에게 먼저</b> — 한국 사무소는 시차로 답이 늦습니다.</p>
+</header>
+
+<div class="note">
+  <p><strong>보이스톡은 벨이 울리지 않는 경우가 많습니다.</strong> 급할 때는 카톡이 아니라 국제전화로 걸고, 두세 번까지는 다시 걸어보세요. 현지 유심으로 바꿔 번호가 달라졌다면 상대가 먼저 연락할 방법이 없습니다.</p>
+</div>
+
+<section>
+  <div class="sechead"><div class="rank">1순위</div><h2>현지에서 생긴 모든 일</h2></div>
+  <p class="when">공항 픽업을 못 만났을 때, 가이드 투어 문제, 사고 — 여기가 가장 먼저입니다.</p>
+  <div class="card">
+    <div class="row big">
+      <div class="who"><div class="n">고완석 팀장 · 로마 현지담당</div><div class="s">카카오톡 <code>romaHoneymoon</code></div></div>
+      <div class="dial"><a href="tel:+393773740184">+39 377 374 0184</a></div>
+    </div>
+    <div class="row">
+      <div class="who"><div class="n">김지연 팀장 · 로마 현지사무실</div><div class="s">고 팀장 연결이 안 될 때</div></div>
+      <div class="dial"><a href="tel:+393515740362">+39 351 574 0362</a></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sechead"><div class="rank">투어</div><h2>미팅 장소에서 못 만났을 때</h2></div>
+  <p class="when">투어 전날 18시까지 가이드 연락이 없으면 기다리지 말고 로마 비상연락망으로 전화하세요.</p>
+  <div class="card">
+    <div class="row">
+      <div class="who"><div class="n">피렌체투어 — 9/23 우피치</div><div class="s">카카오톡 <code>sara0907</code> · 예약 EXP-20260813-00007365</div></div>
+      <div class="dial"><a href="tel:+393482947718">+39 348 294 7718</a></div>
+    </div>
+    <div class="row">
+      <div class="who"><div class="n">알짜투어 — 9/24 돌로미티</div><div class="s">카카오톡 <code>giulioyu8420</code> · 예약 EXP-20260813-00007418</div></div>
+      <div class="dial"><a href="tel:+393333550846">+39 333 355 0846</a></div>
+    </div>
+    <div class="row">
+      <div class="who"><div class="n">스냅 작가 — 9/22 13:50 피렌체</div><div class="s">촬영 1시간 전 작가가 먼저 카톡을 보냅니다</div></div>
+      <div class="dial"><a href="tel:+393314821234">+39 331 482 1234</a></div>
+    </div>
+    <div class="row">
+      <div class="who"><div class="n">이탈리아 오픈카톡방</div><div class="s">open.kakao.com/o/sfgHHgKd</div></div>
+      <div class="dial"><a href="https://open.kakao.com/o/sfgHHgKd" target="_blank" rel="noopener">열기</a></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sechead"><div class="rank">한국</div><h2>열차 · 호텔 · 바우처 문제</h2></div>
+  <p class="when">한국 사무소에서 수배한 건은 여기가 빠릅니다. 시차 때문에 응답이 늦을 수 있어요.</p>
+  <div class="card">
+    <div class="row">
+      <div class="who"><div class="n">허항무 차장 · 팜투어 서울</div><div class="s">사무실 / 휴대폰</div></div>
+      <div class="dial"><a href="tel:+8227224007">+82 2-722-4007</a><span class="alt"><a href="tel:+821097283555">+82 10-9728-3555</a></span></div>
+    </div>
+    <div class="row">
+      <div class="who"><div class="n">팜투어 본사</div><div class="s">서울 강남구 언주로 711 건설회관 1층</div></div>
+      <div class="dial"><a href="tel:+82220036600">02-2003-6600</a></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sechead"><div class="rank">공공</div><h2>긴급 기관</h2></div>
+  <div class="card">
+    <div class="row big">
+      <div class="who"><div class="n">이탈리아 긴급전화</div><div class="s">경찰 · 구급 · 소방 통합</div></div>
+      <div class="dial"><a href="tel:112">112</a></div>
+    </div>
+    <div class="row">
+      <div class="who"><div class="n">영사콜센터</div><div class="s">24시간 · 여권 분실, 사건사고 상담</div></div>
+      <div class="dial"><a href="tel:+82232100404">+82-2-3210-0404</a><span class="alt"><span class="plain">무료 800-2100-0404</span></span></div>
+    </div>
+    <div class="row">
+      <div class="who"><div class="n">주이탈리아 대한민국 대사관 (로마)</div><div class="s">민원 월~금 09:30–12:00 / 14:00–16:30 · 최근 청사 이전, 방문 전 위치 확인</div></div>
+      <div class="dial"><a href="tel:+39064204021">+39 06 4204021</a></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sechead"><div class="rank">숙소</div><h2>호텔</h2></div>
+  <div class="card">
+    <div class="row">
+      <div class="who"><div class="n">Ergife Palace Hotel · 로마 9/19–22</div><div class="s">Largo Lorenzo Mossa 8, 00165 Roma · 바우처 없이 여권 체크인</div></div>
+      <div class="dial"><a href="tel:+390666441">+39 06 66441</a></div>
+    </div>
+    <div class="row">
+      <div class="who"><div class="n">B&amp;B Hotel Firenze Laurus al Duomo · 피렌체 9/22–23</div><div class="s">Via de' Cerretani 54/R, 50123 Firenze</div></div>
+      <div class="dial"><a href="tel:+390552381752">+39 055 238 1752</a></div>
+    </div>
+    <div class="row">
+      <div class="who"><div class="n">Hotel Plaza Venice · 베니스 9/23–26</div><div class="s">Viale Stazione 36, 30171 Venezia Mestre</div></div>
+      <div class="dial"><a href="tel:+39041929388">+39 041 929 388</a></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sechead"><div class="rank">카드</div><h2>분실 신고 · 24시간</h2></div>
+  <div class="card"><div class="cardbody">
+    <div class="cards-grid">
+      <span>신한 <a href="tel:+82215447000">1544-7000</a></span>
+      <span>KB <a href="tel:+82263007300">6300-7300</a></span>
+      <span>삼성 <a href="tel:+82220008200">2000-8200</a></span>
+      <span>현대 <a href="tel:+82230159200">3015-9200</a></span>
+      <span>롯데 <a href="tel:+82222802400">2280-2400</a></span>
+      <span>하나 <a href="tel:+82215885114">1588-5114</a></span>
+      <span>우리 <a href="tel:+82221695001">2169-5001</a></span>
+      <span>BC <a href="tel:+8223305701">330-5701</a></span>
+      <span>NH <a href="tel:+82237041004">3704-1004</a></span>
+      <span>시티 <a href="tel:+82237047000">3704-7000</a></span>
+      <span>외환 <a href="tel:+8225248100">524-8100</a></span>
+      <span>수협 <a href="tel:+82220130000">2013-0000</a></span>
+    </div>
+  </div></div>
+</section>
+
+<section>
+  <div class="sechead"><div class="rank">대처</div><h2>상황별 첫 조치</h2></div>
+  <div class="card"><div class="cardbody">
+    <ol class="steps">
+      <li><b>공항에서 픽업 가이드를 못 만남</b> — 기사는 도착 후 1시간만 대기합니다. 짐 찾기가 늦어지면 한 명이 먼저 나가 알리거나 즉시 전화하세요. 끝내 연락이 안 되면 택시로 호텔까지 이동하고 <b>영수증을 보관</b>해 한국 비상연락망에 전달합니다.</li>
+      <li><b>호텔 체크인이 안 됨</b> — 한국인의 이름과 성을 구분하지 못해 예약을 못 찾는 일이 흔합니다. 현장 결제나 카드 데포짓으로 일단 체크인하고, 영수증과 함께 한국 비상연락망에 메시지를 남기면 나중에 처리됩니다.</li>
+      <li><b>열차·항공이 파업이나 기상으로 취소</b> — 현장에서 직접 대체편으로 교환해야 합니다. 대체가 안 되면 재구매해야 하고 비용은 개인 부담이니 영수증을 꼭 챙기세요.</li>
+      <li><b>도난</b> — 경찰서에서 <b>Police Report</b>를 받아야 보험 청구가 됩니다. 현금은 보상되지 않고 품목당 한도가 있습니다.</li>
+      <li><b>여권 분실</b> — Police Report + 사진 2장 + 신분증을 대사관에 제출해 긴급여권을 신청합니다. 보통 하루, 길면 2~3일. <b>여권 사본이 있으면 훨씬 빠릅니다.</b></li>
+      <li><b>수하물 분실</b> — Baggage Tag을 들고 공항 LOST &amp; FOUND에 신고하고 접수번호와 수령 장소를 확인하세요. 대부분 2~3일 뒤 숙소로 배송됩니다.</li>
+      <li><b>병원 이용</b> — 보험 처리를 위해 <b>진단서와 치료비 영수증 원본</b>을 반드시 받아 오세요.</li>
+    </ol>
+  </div></div>
+</section>
+
+<section>
+  <div class="sechead"><div class="rank">주의</div><h2>이런 접근은 피하세요</h2></div>
+  <div class="card"><div class="cardbody">
+    <ol class="steps">
+      <li>손목에 실팔찌를 채워주며 돈을 요구</li>
+      <li>지하철역에서 표를 대신 뽑아주겠다는 접근</li>
+      <li>사진을 찍어주겠다 / 같이 찍자며 다가오는 사람</li>
+      <li>지하철·버스·트램의 혼잡을 틈탄 소매치기</li>
+      <li>경찰인 척하며 여권과 지갑을 요구</li>
+      <li>짐을 들어주겠다며 가방을 들고 도망</li>
+    </ol>
+    <p class="when" style="margin:14px 0 0">가방은 항상 몸 앞쪽으로. 기차 선반에 카메라나 가방을 올려두지 마세요. 관광지와 기차역 주변, 자유일정 때 특히 조심하세요.</p>
+  </div></div>
+</section>
+
+<footer>확정서(팜투어) 기준 · 대사관 연락처는 외교부 자료 기준</footer>
+
+</div>
+</body>
+</html>
