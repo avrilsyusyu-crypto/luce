@@ -165,6 +165,10 @@ button.tile:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .desc b{color:var(--text);font-weight:500}
 .spot{font-size:13.5px;color:var(--muted);margin-top:6px;padding-left:11px;border-left:2px solid var(--line)}
 .warn{color:var(--accent);font-size:13px;margin-top:5px}
+.desc a,.spot a{color:var(--accent);text-decoration:none;border-bottom:1px solid var(--line);white-space:nowrap}
+.desc a:hover,.spot a:hover{border-bottom-color:var(--accent)}
+.hours{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--muted);margin-top:6px;font-variant-numeric:tabular-nums}
+.hours b{color:var(--text);font-weight:500}
 .tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}
 .tag{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.05em;padding:2px 7px;border-radius:2px;background:var(--surface-2);color:var(--muted)}
 .tag.need,.tag.hot{background:var(--accent-soft);color:var(--accent)}
@@ -460,7 +464,7 @@ details[open] summary{border-bottom:1px solid var(--line-soft)}
 <section class="day" id="d22" data-date="2026-09-22">
   <div class="dayhead">
     <div class="dnum">22<span class="mo"> 화</span></div>
-    <div class="dmeta"><div class="dcity">로마 → 피렌체</div><div class="dsum">스냅 촬영 · 자유 일정</div></div>
+    <div class="dmeta"><div class="dcity">로마 → 피렌체</div><div class="dsum">스냅 촬영 · 산 미니아토 일몰</div></div>
   </div>
   <ul class="tl">
     <li class="ev key"><div class="tcol">07:35</div><div class="rail"><span class="dot"></span></div><div class="body">
@@ -476,6 +480,12 @@ details[open] summary{border-bottom:1px solid var(--line-soft)}
       <div class="ttl">호텔에 짐 맡기기</div>
       <div class="desc">B&amp;B Hotel Firenze Laurus al Duomo · Via de' Cerretani 54/R — 두오모 바로 옆, 역에서 도보 거리입니다. 체크인은 15시라 짐만 맡기고 나오세요.</div>
     </div></li>
+    <li class="ev"><div class="tcol">11:30</div><div class="rail"><span class="dot"></span></div><div class="body">
+      <div class="ttl">점심 — Panini Toscani<span class="tag hot">추천</span></div>
+      <div class="desc">Piazza del Duomo 34/R · 오늘 촬영 미팅 장소인 <b>파네라이 시계매장 바로 옆</b>입니다. 주문 전에 토스카나 햄과 치즈를 맛보여주고 취향대로 조합해 줍니다. 1인 €6~8, 예약 없이 가면 됩니다.</div>
+      <div class="hours">매일 <b>10:00–18:00</b> · 저녁 영업 없음 · <a href="tel:+393355725544">+39 335 572 5544</a></div>
+      <div class="warn">촬영 전이니 손 꼭 닦고 가세요. 빵이 일찍 소진되면 문을 닫기도 하니 오후 늦게는 비추천.</div>
+    </div></li>
     <li class="ev key"><div class="tcol">13:50</div><div class="rail"><span class="dot"></span></div><div class="body">
       <div class="ttl">피렌체 스냅 촬영 (1시간 단독)</div>
       <div class="desc">미팅 — <b>파네라이 시계매장 앞</b> (Piazza di San Giovanni 14 ROSSO). 촬영 1시간 전 작가가 카톡으로 연락합니다.</div>
@@ -483,12 +493,36 @@ details[open] summary{border-bottom:1px solid var(--line-soft)}
       <div class="tags"><span class="tag need">시간 엄수</span><span class="tag need">가벼운 차림</span></div>
     </div></li>
     <li class="ev free"><div class="tcol">15:00</div><div class="rail"><span class="dot"></span></div><div class="body">
-      <div class="ttl">피렌체 자유 일정 · 호텔 체크인</div>
-      <div class="desc spot">두오모와 종탑 · 시뇨리아 광장 · 베키오 궁전 · 베키오 다리 · 아카데미아 미술관(다비드상). 해질 무렵 <b>미켈란젤로 광장</b>에 올라가면 도시 전경과 노을을 함께 볼 수 있습니다 — 피렌체에서 하룻밤뿐이라 이 시간대를 추천해요.</div>
-      <div class="desc">내일 우피치 투어가 08:25 미팅이라 일찍 쉬는 편이 낫습니다.</div>
+      <div class="ttl">호텔 체크인 · 휴식</div>
+      <div class="desc">저녁에 언덕을 오르니 두어 시간 쉬어두세요. 시간이 남으면 두오모 종탑이나 시뇨리아 광장을 가볍게.</div>
+    </div></li>
+    <li class="ev"><div class="tcol">17:00</div><div class="rail"><span class="dot"></span></div><div class="body">
+      <div class="ttl">산 미니아토로 출발</div>
+      <div class="desc">ATAF <b>버스 12번 또는 13번</b>, 20~25분. <b>“San Miniato al Monte” 정류장</b>에서 내리면 성당 계단 바로 앞입니다. 미켈란젤로 광장까지 가지 말고 여기서 내리세요.</div>
+      <div class="desc">걸어 올라가면 Porte San Niccolò 계단을 거쳐 35~40분, 오르막입니다.</div>
+    </div></li>
+    <li class="ev key"><div class="tcol">18:00</div><div class="rail"><span class="dot"></span></div><div class="body">
+      <div class="ttl">산 미니아토 알 몬테<span class="tag hot">오늘만 가능</span></div>
+      <div class="desc">Via delle Porte Sante 34 · 11세기 로마네스크 성당. <b>수도사들이 부르는 그레고리안 성가</b>를 들을 수 있습니다. 미켈란젤로 광장보다 높고 사람은 훨씬 적어요. 입장 무료, 예약 불필요.</div>
+      <div class="hours"><b>18:00</b> 라틴어 미사 · <b>18:30</b> 저녁기도 · <b>19:13</b> 일몰 · <a href="tel:+390552342731">+39 055 234 2731</a></div>
+      <div class="desc">19:00에 성당 문은 닫지만 <b>앞 테라스는 열려 있어</b> 일몰을 볼 수 있습니다.</div>
+      <div class="tags"><span class="tag need">어깨·무릎 가리는 옷</span></div>
+      <div class="warn">내일은 19:20 기차라 올 수 없습니다. 오늘 저녁이 유일한 기회예요. 성가 시간은 계절에 따라 바뀌니 전날 확인하세요.</div>
+    </div></li>
+    <li class="ev key"><div class="tcol">20:00</div><div class="rail"><span class="dot"></span></div><div class="body">
+      <div class="ttl">저녁 — I Tarocchi<span class="tag hot">추천</span></div>
+      <div class="desc">Via dei Renai 12/14R · 성당에서 걸어 내려오면 25분. 저온숙성 도우 피자와 토스카나 가정식. 라비올리와 그누디가 평이 좋습니다. 1인 €25~35.</div>
+      <div class="hours">화·수 <b>12:00–15:00 / 19:00–24:00</b> · 월 휴무 · <a href="tel:+390552343912">+39 055 234 3912</a></div>
+      <div class="warn">15:00–19:00은 완전히 닫습니다. 야외 테라스를 원하면 예약해두세요.</div>
+    </div></li>
+    <li class="ev"><div class="tcol">21:30</div><div class="rail"><span class="dot"></span></div><div class="body">
+      <div class="ttl">젤라또 — La Sorbettiera<span class="tag hot">추천</span></div>
+      <div class="desc">Via Mazzetta 9/a, 산토 스피리토 · I Tarocchi에서 도보 15분. 다크초콜릿 크림 <b>Catrame</b>가 시그니처, 소금 캐러멜과 레몬·세이지도 유명합니다. 1인 €3~6.</div>
+      <div class="hours">화 <b>12:00–23:30</b> · 수 12:00–22:30 · 연중무휴 · <a href="tel:+39055290441">+39 055 290441</a></div>
+      <div class="desc">저녁에 현지 사람들이 모이는 광장이라 분위기가 좋습니다. 내일 08:25 미팅이니 너무 늦지 않게.</div>
     </div></li>
   </ul>
-  <div class="daynote"><span>숙소 <b>피렌체 Laurus al Duomo</b></span><span>식사 <b>조식 호텔 · 중·석식 불포함</b></span></div>
+  <div class="daynote"><span>숙소 <b>피렌체 Laurus al Duomo</b></span><span>식사 <b>조식 호텔 · 중·석식 불포함</b></span><span>저녁 동선 <b>전부 아르노 강 남쪽</b></span></div>
 </section>
 
 <!-- ============ 9/23 ============ -->
@@ -507,6 +541,12 @@ details[open] summary{border-bottom:1px solid var(--line-soft)}
     <li class="ev"><div class="tcol">오전</div><div class="rail"><span class="dot"></span></div><div class="body">
       <div class="ttl">우피치 미술관 → 베키오 다리 → 시뇨리아 광장 → 단테의 집 → 두오모 광장</div>
       <div class="desc">미술관 관람이 끝나면 곧바로 시내 투어로 이어집니다. 가이드 설명은 녹음·녹화를 삼가 달라고 안내되어 있어요.</div>
+    </div></li>
+    <li class="ev"><div class="tcol">13:00</div><div class="rail"><span class="dot"></span></div><div class="body">
+      <div class="ttl">젤라또 — La Gelatiera<span class="tag hot">추천</span></div>
+      <div class="desc">Via de' Ginori 21/R · <b>투어가 두오모 광장에서 끝나니 거기서 도보 5분</b>입니다. 얼그레이·호지차·말차 같은 독특한 맛으로 유명하고, 100% 글루텐프리 매장이에요. 1인 €3~5.</div>
+      <div class="hours">화·수 <b>13:00–20:00</b>은 확실 · 월 휴무 · <a href="tel:+390557606445">+39 055 760 6445</a></div>
+      <div class="desc">산 로렌초 시장이 바로 옆이고 SMN역까지도 도보 10분이라, <b>기차 타기 직전 마지막 코스</b>로도 좋습니다. 앉을 자리는 거의 없어 서서 먹는 집이에요.</div>
     </div></li>
     <li class="ev free"><div class="tcol">오후</div><div class="rail"><span class="dot"></span></div><div class="body">
       <div class="ttl">자유 일정</div>
