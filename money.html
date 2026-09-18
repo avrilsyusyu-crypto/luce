@@ -260,14 +260,18 @@ function chain(key, fn){ const prev = writeQ.get(key) || Promise.resolve(); cons
 function lsGet(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } }
 function lsSet(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
 
-async function saveMonth(key, items){
-  S.months.set(key, items); S.sample=false; render();
+// 월 데이터는 항상 "현재 저장된 값 → 변경 함수 적용" 순서로 씁니다. 두 폰이 동시에 써도 서로의 내역을 덮어쓰지 않아요.
+async function mutateMonth(key, fn){
+  const before=S.months.get(key)||[]; const after=fn(before);
+  if (after===before) return;
+  S.months.set(key, after); S.sample=false; render();
   if (S.storage==='db') {
-    return chain('m'+key, async()=>{ try { await S.db.doc('months/'+key).set({items}); markSaved(); } catch(e){ toast('저장에 실패했어요. 잠시 후 다시 시도해 주세요.'); } });
+    return chain('m'+key, async()=>{ try { const ref=S.db.doc('months/'+key); const snap=await ref.get(); const cur=(snap.exists && Array.isArray(snap.data().items)) ? snap.data().items : []; const merged=fn(cur); await ref.set({items:merged}); S.months.set(key,merged); markSaved(); } catch(e){ console.error(e); toast('저장에 실패했어요. 잠시 후 다시 시도해 주세요.'); } });
   } else if (S.storage==='fb') {
-    return chain('m'+key, async()=>{ try { await S.fb.ref(`ledgers/${S.fbCode}/months/${key}`).set({items}); markSaved(); } catch(e){ toast('저장에 실패했어요. 인터넷 연결을 확인해 주세요.'); } });
-  } else { const all = lsGet('ledger.months')||{}; all[key]=items; lsSet('ledger.months', all); markSaved(); }
+    return chain('m'+key, async()=>{ try { await S.fb.ref(`ledgers/${S.fbCode}/months/${key}`).transaction(cur=>{ const items=(cur && Array.isArray(cur.items)) ? cur.items : []; return {items: fn(items)}; }); markSaved(); } catch(e){ console.error(e); toast('저장에 실패했어요. 인터넷 연결을 확인해 주세요.'); } });
+  } else { const all = lsGet('ledger.months')||{}; all[key]=after; lsSet('ledger.months', all); markSaved(); }
 }
+async function saveMonth(key, items){ return mutateMonth(key, ()=>items); }
 async function saveSettings(){
   const body = {cats:S.cats, members:S.members, recurring:S.recurring, skipped:S.skipped, rates:S.rates, v:S.v}; render();
   if (S.storage==='db') return chain('settings', async()=>{ try { await S.db.doc('settings/main').set(body); markSaved(); } catch(e){ toast('저장에 실패했어요.'); } });
@@ -346,13 +350,50 @@ function initLocal(){
   applySettingsDoc(st); S.months = new Map(Object.entries(all||{}));
   S.settingsLoaded=S.monthsLoaded=true; render(); applyRecurring();
 }
+// ---------- 백업 ----------
+let backedUp=false;
+function snapshotAll(){ return {at:new Date().toISOString(), settings:{cats:S.cats,members:S.members,recurring:S.recurring,skipped:S.skipped,rates:S.rates,v:S.v}, months:Object.fromEntries(S.months)}; }
+async function backupDaily(force){
+  if (!S.settingsLoaded || !S.monthsLoaded || (backedUp && !force)) return; backedUp=true;
+  const day=today(); const snap=snapshotAll();
+  try {
+    if (S.storage==='fb') { const ref=S.fb.ref(`ledgers/${S.fbCode}/backups`); if (!force) { const ex=await ref.child(day).get(); if (ex.exists()) return; } await ref.child(day).set(snap); const all=await ref.get(); const keys=Object.keys(all.val()||{}).sort(); for (const k of keys.slice(0,Math.max(0,keys.length-30))) await ref.child(k).remove(); }
+    else if (S.storage==='db') { const ref=S.db.doc('backups/'+day); if (!force) { const ex=await ref.get(); if (ex.exists) return; } await ref.set(snap); }
+    else { const all=lsGet('ledger.backups')||{}; if (!force && all[day]) return; all[day]=snap; const keys=Object.keys(all).sort(); for (const k of keys.slice(0,Math.max(0,keys.length-7))) delete all[k]; lsSet('ledger.backups',all); }
+    if (force) toast('백업했어요 ('+day+')');
+  } catch(e){ console.error(e); if (force) toast('백업에 실패했어요.'); }
+}
+async function listBackups(){
+  try {
+    if (S.storage==='fb') { const all=await S.fb.ref(`ledgers/${S.fbCode}/backups`).get(); return Object.entries(all.val()||{}).sort((a,b)=>b[0].localeCompare(a[0])); }
+    if (S.storage==='db') { const q=await S.db.collection('backups').get(); return q.docs.map(d=>[d.id,d.data()]).sort((a,b)=>b[0].localeCompare(a[0])); }
+    return Object.entries(lsGet('ledger.backups')||{}).sort((a,b)=>b[0].localeCompare(a[0]));
+  } catch(e){ return []; }
+}
+async function restoreBackup(day, snap){
+  if (!confirm(`${day} 백업으로 되돌릴까요?\n지금 상태는 먼저 자동 백업해 둔 뒤 되돌려요.`)) return;
+  await backupDaily(true);
+  applySettingsDoc(snap.settings); await saveSettings();
+  for (const [k,items] of Object.entries(snap.months||{})) if (Array.isArray(items)) await mutateMonth(k, ()=>items);
+  for (const k of [...S.months.keys()]) if (!(snap.months||{})[k]) await mutateMonth(k, ()=>[]);
+  toast('되돌렸어요'); render();
+}
+async function openBackups(){
+  const list=await listBackups();
+  const body=el('div',{},
+    el('div',{class:'row',style:'margin-bottom:12px'}, el('button',{class:'btn pri sm',onclick:async()=>{ await backupDaily(true); closeSheet(); openBackups(); }},'지금 백업'), el('span',{class:'subtle',style:'margin:0'},'매일 처음 열 때 자동으로 한 번 백업돼요.')),
+    list.length ? el('div',{class:'catlist'}, list.map(([day,snap])=>{ const n=Object.values(snap.months||{}).reduce((a,x)=>a+(Array.isArray(x)?x.length:0),0); return el('div',{class:'catrow'}, el('span',{}), el('span',{class:'n'}, day, el('small',{}, n+'건')), el('span',{}, el('button',{class:'btn sm',style:'white-space:nowrap',onclick:()=>restoreBackup(day,snap)},'되돌리기'))); }))
+      : el('div',{class:'empty',style:'padding:20px'},'아직 백업이 없어요.'),
+    el('div',{class:'row',style:'justify-content:flex-end;margin-top:12px'}, el('button',{class:'btn',onclick:closeSheet},'닫기')));
+  openSheet('백업 · 되돌리기', body);
+}
 // ---------- migration ----------
-function renameWho(oldName,newName){
+async function renameWho(oldName,newName){
   if (!oldName || !newName || oldName===newName) return;
   S.recurring = S.recurring.map(r=> r.who===oldName ? {...r,who:newName} : r);
-  const changed=[];
-  for (const [k,items] of S.months) { if (items.some(t=>t.who===oldName)) { S.months.set(k, items.map(t=> t.who===oldName?{...t,who:newName}:t)); changed.push(k); } }
-  return changed;
+  await saveSettings();
+  const fn = items => items.some(t=>t.who===oldName) ? items.map(t=> t.who===oldName?{...t,who:newName}:t) : items;
+  for (const k of [...S.months.keys()]) await mutateMonth(k, fn);
 }
 async function migrateV2(){
   if ((S.v||0)>=2) return;
@@ -361,52 +402,46 @@ async function migrateV2(){
     S.cats = S.cats.filter(c=>!merge[c.id]).map(c=> ren[c.id]?{...c,name:ren[c.id]}:c);
     const memos={save1y:'1년 적금 100만 · 연 3.65% 세전 · 2026-09~2027-08', save6m:'6개월 적금 50만 · 2026-07-10~2027-01-10', save3y:'3년 적금 30만 · 2025-07-02~2028-07-02', pension:'연금계좌 ETF', usstock:'미국 주식', gyeongjo:'경조사비 자동이체'};
     S.recurring = S.recurring.map(r=>({...r, cat: merge[r.cat]||r.cat, memo: memos[r.id]||r.memo}));
-    for (const [k,items] of S.months) if (items.some(t=>merge[t.cat])) S.months.set(k, items.map(t=> merge[t.cat]?{...t,cat:merge[t.cat]}:t));
   }
-  // default names → the names the couple chose
-  const ch=[]; if (S.members[0]!=='나') ch.push(...(renameWho('나',S.members[0])||[])); if (S.members[1]!=='배우자') ch.push(...(renameWho('배우자',S.members[1])||[]));
+  const whoMap={}; if (S.members[0]!=='나') whoMap['나']=S.members[0]; if (S.members[1]!=='배우자') whoMap['배우자']=S.members[1];
+  S.recurring = S.recurring.map(r=> whoMap[r.who] ? {...r,who:whoMap[r.who]} : r);
+  const mig = items => { let ch=false; const out=items.map(t=>{ const c=merge[t.cat]||t.cat; const w=whoMap[t.who]||t.who; if (c!==t.cat||w!==t.who){ ch=true; return {...t,cat:c,who:w}; } return t; }); return ch?out:items; };
   S.v=2; await saveSettings();
-  for (const k of new Set([...S.months.keys()])) await saveMonth(k, S.months.get(k));
+  for (const k of [...S.months.keys()]) await mutateMonth(k, mig);
 }
 // ---------- recurring ----------
-let applying=false;
+let applying=false, applyAgain=false;
 async function applyRecurring(){
-  if (applying || !S.settingsLoaded || !S.monthsLoaded) return;
+  if (!S.settingsLoaded || !S.monthsLoaded) return;
+  if (applying) { applyAgain=true; return; }
   applying=true;
   try {
     await migrateV2();
-    const nd=new Date(); nd.setMonth(nd.getMonth()+1); const cur=`${nd.getFullYear()}-${pad(nd.getMonth()+1)}`; const changed=new Map();
+    const nd=new Date(); nd.setMonth(nd.getMonth()+1); const cur=`${nd.getFullYear()}-${pad(nd.getMonth()+1)}`;
     const rules=new Map(S.recurring.map(r=>[r.id,r]));
-    const expected=(r,key)=>{ const [y,m]=key.split('-').map(Number); const dim=new Date(y,m,0).getDate(); return {id:`r-${r.id}-${key}`,date:`${key}-${pad(Math.min(r.day||1,dim))}`,type:r.type,cat:r.cat,amount:r.amount,memo:r.memo||'',who:r.who||S.members[0],ts:Date.parse(`${key}-${pad(Math.min(r.day||1,dim))}`),auto:true}; };
-    // 1) sync existing auto items with their rule (date/amount/etc.), drop ones outside the rule's range or whose rule is gone
-    for (const [key,items] of S.months) {
-      let dirty=false; const out=[];
+    const expected=(r,key)=>{ const [y,m]=key.split('-').map(Number); const dim=new Date(y,m,0).getDate(); const date=`${key}-${pad(Math.min(r.day||1,dim))}`; return {id:`r-${r.id}-${key}`,date,type:r.type,cat:r.cat,amount:r.amount,memo:r.memo||'',who:r.who||S.members[0],ts:Date.parse(date),auto:true}; };
+    // which months each rule covers (start ~ min(end, next month))
+    const covered=new Map(); // key -> rules[]
+    for (const r of S.recurring) { if (!r.start) continue; let [y,m]=r.start.split('-').map(Number);
+      while (`${y}-${pad(m)}` <= cur) { const key=`${y}-${pad(m)}`; if (r.end && key>r.end) break; if (!covered.has(key)) covered.set(key,[]); covered.get(key).push(r); m++; if (m>12){m=1;y++;} } }
+    // pure per-month sync: fix existing auto items to match their rule, drop only items OUTSIDE a still-existing rule's range, add missing ones
+    const syncMonth = key => items => {
+      let changed=false; const out=[];
       for (const t of items) {
         const m=t.auto && /^r-(.+)-(\d{4}-\d{2})$/.exec(t.id);
         if (!m) { out.push(t); continue; }
         const r=rules.get(m[1]);
-        if (!r || key<r.start || (r.end && key>r.end)) { dirty=true; continue; }
+        if (!r) { out.push(t); continue; }                       // rule deleted → keep the record (never silently erase)
+        if (key<r.start || (r.end && key>r.end)) { changed=true; continue; }
         const e=expected(r,key);
-        if (e.date!==t.date||e.amount!==t.amount||e.cat!==t.cat||e.memo!==t.memo||e.type!==t.type) { out.push({...t,...e}); dirty=true; } else out.push(t);
+        if (e.date!==t.date||e.amount!==t.amount||e.cat!==t.cat||e.memo!==t.memo||e.type!==t.type||e.who!==t.who) { out.push({...t,...e}); changed=true; } else out.push(t);
       }
-      if (dirty) changed.set(key,out);
-    }
-    // 2) add missing ones from each rule's start through next month
-    for (const r of S.recurring) {
-      if (!r.start) continue;
-      let [y,m]=r.start.split('-').map(Number);
-      while (`${y}-${pad(m)}` <= cur) {
-        const key=`${y}-${pad(m)}`; if (r.end && key > r.end) break;
-        const e=expected(r,key);
-        if (!S.skipped.includes(e.id)) {
-          const items=changed.get(key)||S.months.get(key)||[];
-          if (!items.some(t=>t.id===e.id)) changed.set(key,[...items,e]);
-        }
-        m++; if (m>12){m=1;y++;}
-      }
-    }
-    for (const [k,items] of changed) await saveMonth(k,items);
-  } finally { applying=false; }
+      for (const r of covered.get(key)||[]) { const e=expected(r,key); if (!S.skipped.includes(e.id) && !out.some(t=>t.id===e.id)) { out.push(e); changed=true; } }
+      return changed ? out : items;
+    };
+    const keys=new Set([...S.months.keys(), ...covered.keys()]);
+    for (const k of keys) await mutateMonth(k, syncMonth(k));
+  } finally { applying=false; if (applyAgain) { applyAgain=false; applyRecurring(); } else backupDaily(false); }
 }
 // ---------- data access ----------
 function catOf(id){ return (S.cats||[]).find(c=>c.id===id) || {id, name:'미분류', type:'expense', color:'#9a9a94'}; }
@@ -632,13 +667,14 @@ function viewCats(){
     : el('p',{class:'subtle',style:'margin:0'},'자동이체처럼 매달 같은 날 반복되는 내역을 등록하면, 그 달이 되면 자동으로 기록돼요.')));
   { const rs=Object.entries(S.rates); if (rs.length) wrap.append(el('div',{class:'card'}, el('h3',{},'기억된 환율', el('span',{},'마지막 입력값')), el('div',{class:'row'}, rs.map(([c,r])=>el('span',{class:'chip num'}, `1 ${c} = ${Number(r).toLocaleString('ko-KR')}원`))), el('p',{class:'subtle'},'외화로 입력할 때 마지막에 쓴 환율이 자동으로 채워지고, 고치면 그 값을 기억해요. 합계와 그래프는 모두 원화 기준이에요.'))); }
   wrap.append(el('div',{class:'card'}, el('h3',{},'우리 이름'),
-    el('div',{class:'row'}, S.members.map((m,i)=>el('input',{value:m,'aria-label':`이름 ${i+1}`,id:'member'+i,style:'flex:1;min-width:120px;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:9px 12px',onchange:async e=>{ const nn=e.target.value.trim()||m; if (nn===m) return; S.members=S.members.map((x,j)=>j===i?nn:x); const changed=renameWho(m,nn)||[]; await saveSettings(); for (const k of changed) await saveMonth(k,S.months.get(k)); toast(`${m} → ${nn} 으로 바꿨어요`); }}))),
+    el('div',{class:'row'}, S.members.map((m,i)=>el('input',{value:m,'aria-label':`이름 ${i+1}`,id:'member'+i,style:'flex:1;min-width:120px;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:9px 12px',onchange:async e=>{ const nn=e.target.value.trim()||m; if (nn===m) return; S.members=S.members.map((x,j)=>j===i?nn:x); await renameWho(m,nn); toast(`${m} → ${nn} 으로 바꿨어요`); }}))),
     el('p',{class:'subtle'},'이름을 바꾸면 이미 기록된 내역과 반복 규칙에도 새 이름이 반영돼요.')));
-  if (S.storage==='local') wrap.append(el('div',{class:'card'}, el('h3',{},'백업 · 옮기기'),
+  wrap.append(el('div',{class:'card'}, el('h3',{},'백업 · 안전장치'),
     el('div',{class:'row'},
-      el('button',{class:'btn',onclick:exportJson},'파일로 내보내기'),
+      el('button',{class:'btn',onclick:openBackups},'백업 목록 · 되돌리기'),
+      S.storage!=='db' ? el('button',{class:'btn',onclick:exportJson},'파일로 내보내기') : null,
       el('label',{class:'btn',style:'cursor:pointer'},'파일 가져오기', el('input',{type:'file',accept:'application/json,.json',id:'import-file',style:'display:none',onchange:importJson}))),
-    el('p',{class:'subtle'},'내보낸 파일을 배우자 기기에서 가져오면 같은 내역을 볼 수 있어요. 가져오기는 기존 내역과 합쳐지고, 같은 내역은 중복되지 않아요.')));
+    el('p',{class:'subtle'}, S.storage==='local' ? '지금은 이 기기 브라우저에만 저장돼요. 브라우저 데이터를 지우면 사라질 수 있으니, 가끔 "파일로 내보내기"로 백업 파일을 보관해 두세요.' : '매일 처음 열 때 자동 백업이 남고(최근 30일), 잘못 지웠을 때 그 날짜로 되돌릴 수 있어요. 가져오기는 기존 내역과 합쳐지고 같은 내역은 중복되지 않아요.')));
   wrap.append(el('div',{class:'card'}, el('h3',{},'저장 위치'),
     el('p',{class:'subtle',style:'margin:0'}, S.storage==='db' ? '이 페이지를 열 수 있는 두 사람 모두 같은 내역을 보고, 입력하면 상대방 화면에도 바로 반영돼요.'
       : S.storage==='fb' ? `가족 코드 "${S.fbCode}" 로 연결된 부부 공용 저장소예요. 배우자 폰에서 같은 코드를 입력하면 같은 내역을 실시간으로 봐요.`
@@ -655,7 +691,7 @@ function importJson(e){
   rd.onload=async()=>{ try{ const d=JSON.parse(rd.result); if(!d.months) throw 0;
     if (Array.isArray(d.cats)) { const ids=new Set(S.cats.map(c=>c.id)); S.cats=[...S.cats, ...d.cats.filter(c=>!ids.has(c.id))]; }
     if (Array.isArray(d.members)) S.members=d.members; if (Array.isArray(d.recurring)) { const ids=new Set(S.recurring.map(r=>r.id)); S.recurring=[...S.recurring,...d.recurring.filter(r=>!ids.has(r.id))]; }
-    let n=0; for (const [k,items] of Object.entries(d.months)) { const cur=S.months.get(k)||[]; const have=new Set(cur.map(t=>t.id)); const add=items.filter(t=>!have.has(t.id)); n+=add.length; if (add.length) await saveMonth(k,[...cur,...add]); }
+    let n=0; for (const [k,items] of Object.entries(d.months)) { if (!Array.isArray(items)) continue; await mutateMonth(k, cur=>{ const have=new Set(cur.map(t=>t.id)); const add=items.filter(t=>!have.has(t.id)); n+=add.length; return add.length?[...cur,...add]:cur; }); }
     await saveSettings(); toast(`${n}건을 가져왔어요`); } catch(err){ toast('가져올 수 없는 파일이에요.'); } e.target.value=''; };
   rd.readAsText(f);
 }
@@ -705,10 +741,10 @@ function openCatDelete(cat, n){
     el('p',{style:'margin:0 0 12px'}, `'${cat.name}' 항목으로 기록된 내역이 ${n}건 있어요. 어느 항목으로 옮길까요?`),
     el('div',{class:'field'}, el('label',{for:'cat-move'},'옮길 항목'), sel),
     el('div',{class:'row',style:'justify-content:flex-end'}, el('button',{class:'btn',onclick:()=>openCatForm(cat)},'취소'), el('button',{class:'btn pri',onclick:async()=>{
-      const to=sel.value; const changed=[];
-      for (const [k,items] of S.months) if (items.some(t=>t.cat===cat.id)) { S.months.set(k, items.map(t=>t.cat===cat.id?{...t,cat:to||t.cat}:t)); changed.push(k); }
+      const to=sel.value;
       S.recurring=S.recurring.map(r=>r.cat===cat.id?{...r,cat:to||r.cat}:r);
-      S.cats=S.cats.filter(c=>c.id!==cat.id); await saveSettings(); if (to) for (const k of changed) await saveMonth(k,S.months.get(k));
+      S.cats=S.cats.filter(c=>c.id!==cat.id); await saveSettings();
+      if (to) for (const k of [...S.months.keys()]) await mutateMonth(k, items=> items.some(t=>t.cat===cat.id) ? items.map(t=>t.cat===cat.id?{...t,cat:to}:t) : items);
       closeSheet(); toast(to?`${n}건을 옮기고 삭제했어요`:'삭제했어요'); }}, '옮기고 삭제')));
   openSheet('항목 삭제', body);
 }
@@ -757,10 +793,9 @@ function openForm(t){
     if(!v){ amt.focus(); return; } if(!date.value){ date.focus(); return; } if(!d.cat){ toast('항목을 먼저 추가해 주세요.'); return; }
     const item={id:d.id,date:date.value,type:d.type,cat:d.cat,amount:v,memo:memo.value.trim(),who:d.who,ts:d.ts}; if (fx) item.fx=fx;
     const key=ym(item.date);
-    if (origMonth && origMonth!==key) await saveMonth(origMonth, (S.months.get(origMonth)||[]).filter(x=>x.id!==item.id));
-    const list=(S.months.get(key)||[]).filter(x=>x.id!==item.id); list.push(item);
+    if (origMonth && origMonth!==key) await mutateMonth(origMonth, items=>items.filter(x=>x.id!==item.id));
     S.month=key; S.selDay=item.date; if (S.stats.mode==='day') S.stats.date=item.date; S.stats.month=key; S.stats.year=key.slice(0,4);
-    await saveMonth(key, list); closeSheet(); toast(isNew?'저장했어요':'수정했어요');
+    await mutateMonth(key, items=>[...items.filter(x=>x.id!==item.id), item]); closeSheet(); toast(isNew?'저장했어요':'수정했어요');
   };
   const body=el('div',{}, seg,
     el('div',{class:'field'}, el('label',{},'통화'), curBox),
@@ -771,7 +806,7 @@ function openForm(t){
     el('div',{class:'field'}, el('label',{},'누가'), whoBox),
     el('div',{class:'field'}, el('label',{for:'tx-memo'},'메모'), memo),
     el('div',{class:'row',style:'justify-content:space-between;margin-top:6px'},
-      isNew?el('span'):el('button',{class:'btn danger',onclick:async()=>{ if(!confirm('이 내역을 삭제할까요?')) return; if (String(d.id).startsWith('r-')) { S.skipped=[...S.skipped,d.id]; saveSettings(); } await saveMonth(origMonth,(S.months.get(origMonth)||[]).filter(x=>x.id!==d.id)); closeSheet(); toast('삭제했어요'); }},'삭제'),
+      isNew?el('span'):el('button',{class:'btn danger',onclick:async()=>{ if(!confirm('이 내역을 삭제할까요?')) return; if (String(d.id).startsWith('r-')) { S.skipped=[...S.skipped,d.id]; saveSettings(); } await mutateMonth(origMonth, items=>items.filter(x=>x.id!==d.id)); closeSheet(); toast('삭제했어요'); }},'삭제'),
       el('div',{class:'row'}, el('button',{class:'btn',onclick:closeSheet},'취소'), el('button',{class:'btn pri',onclick:save}, isNew?'저장':'수정'))));
   openSheet(isNew?'내역 입력':'내역 수정', body); setTimeout(()=>amt.focus(),50);
 }
