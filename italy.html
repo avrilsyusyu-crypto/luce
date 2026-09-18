@@ -311,6 +311,34 @@ a.pl:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pl-note{display:block;font-size:12.5px;color:var(--muted);margin-top:3px}
 .pl-go{flex:none;font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--accent);white-space:nowrap}
+/* ---------- meals & free time ---------- */
+.mealwrap{overflow-x:auto;margin:0 0 6px}
+table.meals{border-collapse:collapse;width:100%;font-size:13px;table-layout:fixed}
+table.meals th,table.meals td{padding:9px 4px;border-bottom:1px solid var(--line-soft);text-align:left;vertical-align:middle}
+table.meals th{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--muted);font-weight:400;border-bottom:1px solid var(--line);white-space:nowrap}
+table.meals td.d{font-family:"IBM Plex Mono",monospace;font-size:12px;width:74px;white-space:nowrap;font-variant-numeric:tabular-nums}
+table.meals td.d b{font-size:14px;font-weight:500}
+table.meals td.ft{font-size:12.5px;color:var(--muted);line-height:1.45}
+table.meals tr:last-child td{border-bottom:none}
+table.meals tr.paid td{background:var(--accent-soft)}
+.m{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:11px;padding:2px 6px;border-radius:2px;white-space:nowrap}
+.m.inc{background:var(--done-soft);color:var(--done)}
+.m.own{background:var(--accent-soft);color:var(--accent);font-weight:500}
+.m.air{background:var(--surface-2);color:var(--muted)}
+.m.non{color:var(--faint)}
+.ftlist{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.ftlist-h{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.ft-row{display:flex;gap:12px;padding:6px 0;font-size:13.5px;align-items:baseline}
+.ft-row + .ft-row{border-top:1px solid var(--line-soft)}
+.ft-d{flex:none;width:58px;font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.ft-v{flex:1;min-width:0;color:var(--muted);line-height:1.5}
+.ft-v b{color:var(--accent);font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:500}
+.mealsum{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:14px;padding-top:13px;border-top:1px solid var(--line);font-size:13.5px}
+.mealsum b{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+.daynote .mb{display:inline-flex;align-items:center;gap:5px}
+.free-len{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--accent);
+  background:var(--accent-soft);padding:2px 7px;border-radius:2px;margin-left:7px;white-space:nowrap}
 .footnote{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
 
 @media (max-width:560px){
@@ -409,6 +437,46 @@ a.pl:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
     <button type="button" data-day="d26" data-date="2026-09-26">26 토</button>
     <button type="button" data-day="d27" data-date="2026-09-27">27 일</button>
   </div>
+  <div class="notice" style="margin-bottom:18px">
+    <h3>식사와 자유시간 — 한눈에</h3>
+    <p><span class="m own">자비</span> 표시는 <b>두 분이 직접 사 드셔야 하는 끼니</b>입니다. 분홍색 줄이 자비 식사가 있는 날이에요. <span class="m inc">호텔</span> <span class="m inc">도시락</span> <span class="m inc">포함</span>은 요금에 들어 있는 식사고요.</p>
+    <div class="mealwrap">
+      <table class="meals">
+        <thead><tr><th>날짜</th><th>조식</th><th>중식</th><th>석식</th></tr></thead>
+        <tbody>
+        <tr><td class="d"><b>9/19</b> 토</td><td><span class="m air">기내</span></td><td><span class="m air">기내</span></td><td><span class="m air">기내</span></td></tr>
+        <tr class="paid"><td class="d"><b>9/20</b> 일</td><td><span class="m inc">도시락</span></td><td><span class="m own">€15</span></td><td><span class="m own">자비</span></td></tr>
+        <tr class="paid"><td class="d"><b>9/21</b> 월</td><td><span class="m inc">호텔</span></td><td><span class="m inc">포함</span></td><td><span class="m own">자비</span></td></tr>
+        <tr class="paid"><td class="d"><b>9/22</b> 화</td><td><span class="m inc">호텔</span></td><td><span class="m own">자비</span></td><td><span class="m own">자비</span></td></tr>
+        <tr class="paid"><td class="d"><b>9/23</b> 수</td><td><span class="m inc">호텔</span></td><td><span class="m own">자비</span></td><td><span class="m own">자비</span></td></tr>
+        <tr class="paid"><td class="d"><b>9/24</b> 목</td><td><span class="m inc">호텔</span></td><td><span class="m own">자비</span></td><td><span class="m own">자비</span></td></tr>
+        <tr class="paid"><td class="d"><b>9/25</b> 금</td><td><span class="m inc">호텔</span></td><td><span class="m own">자비</span></td><td><span class="m own">자비</span></td></tr>
+        <tr class="paid"><td class="d"><b>9/26</b> 토</td><td><span class="m inc">호텔</span></td><td><span class="m own">자비</span></td><td><span class="m air">기내</span></td></tr>
+        <tr><td class="d"><b>9/27</b> 일</td><td><span class="m air">기내</span></td><td><span class="m non">—</span></td><td><span class="m non">—</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="ftlist">
+      <div class="ftlist-h">자유시간</div>
+      <div class="ft-row"><span class="ft-d">9/19 토</span><span class="ft-v">없음 · 밤 도착</span></div>
+      <div class="ft-row"><span class="ft-d">9/20 일</span><span class="ft-v">포지타노 자유시간 · 로마 귀환 후 저녁</span></div>
+      <div class="ft-row"><span class="ft-d">9/21 월</span><span class="ft-v">석식 90분뿐 · 그 후 가이드와 호텔 이동</span></div>
+      <div class="ft-row"><span class="ft-d">9/22 화</span><span class="ft-v"><b>10:00–13:30</b> · <b>15:00부터 밤까지</b></span></div>
+      <div class="ft-row"><span class="ft-d">9/23 수</span><span class="ft-v">투어 종료(12~13시)<b>–18:50</b> 약 6시간</span></div>
+      <div class="ft-row"><span class="ft-d">9/24 목</span><span class="ft-v">투어 중 자유시간 · 메스트레 복귀 후 저녁</span></div>
+      <div class="ft-row"><span class="ft-d">9/25 금</span><span class="ft-v"><b>종일 자유</b> · 이번 여행에서 유일</span></div>
+      <div class="ft-row"><span class="ft-d">9/26 토</span><span class="ft-v"><b>12:15–16:30</b> 로마 약 4시간</span></div>
+    </div>
+    <div class="mealsum">
+      <span>자비 중식 <b>6회</b></span>
+      <span>자비 석식 <b>6회</b></span>
+      <span>2인 예상 <b>€400~550</b></span>
+    </div>
+    <p style="margin-top:12px">식사비는 안내문 기준 <b>중식 1인 €12~15, 석식 1인 €20~30</b>입니다. 남부투어 현장지불 €103/인은 여기에 포함되지 않은 별도 금액이에요.</p>
+    <p><b>포함된 식사는 딱 두 번뿐입니다</b> — 9/20 조식 도시락과 9/21 중식. 나머지 조식은 호텔에서, 그 외는 전부 직접 해결하셔야 합니다.</p>
+  </div>
+
 <!-- ============ 9/19 ============ -->
 <section class="day" id="d19" data-date="2026-09-19">
   <div class="dayhead">
@@ -443,7 +511,7 @@ a.pl:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
       <div class="desc">Largo Lorenzo Mossa 8 · 바우처 없이 <b>여권으로 현장 체크인</b>, 카드 데포짓. 내일 남부투어 조식 도시락 바우처를 리셉션에 확인하세요.</div>
     </div></li>
   </ul>
-  <div class="daynote"><span>숙소 <b>로마 Ergife Palace</b></span><span>식사 <b>기내식</b></span></div>
+  <div class="daynote"><span>숙소 <b>로마 Ergife Palace</b></span><span class="mb">조식 <span class="m air">기내</span></span><span class="mb">중식 <span class="m air">기내</span></span><span class="mb">석식 <span class="m air">기내</span></span></div>
 </section>
 
 <!-- ============ 9/20 ============ -->
@@ -473,11 +541,11 @@ a.pl:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
       <div class="desc">현금 내역 — 현장지불금 €50 · 폼페이 입장 €20 · 중식 €15 · 포지타노 미니버스 왕복 €15 · 수신기 €3</div>
     </div></li>
     <li class="ev free"><div class="tcol">밤</div><div class="rail"><span class="dot"></span></div><div class="body">
-      <div class="ttl">로마 귀환 · 석식 자유</div>
+      <div class="ttl">로마 귀환 · 석식 자유<span class="free-len">자비</span></div>
       <div class="desc">이동이 긴 하루라 늦게 돌아옵니다. 호텔 근처에서 간단히 드시는 편이 좋아요.</div>
     </div></li>
   </ul>
-  <div class="daynote"><span>숙소 <b>로마 Ergife Palace</b></span><span>식사 <b>조식 도시락 · 중·석식 불포함</b></span></div>
+  <div class="daynote"><span>숙소 <b>로마 Ergife Palace</b></span><span class="mb">조식 <span class="m inc">도시락</span></span><span class="mb">중식 <span class="m own">€15</span></span><span class="mb">석식 <span class="m own">자비</span></span></div>
 </section>
 
 <!-- ============ 9/21 ============ -->
@@ -506,11 +574,11 @@ a.pl:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
       <div class="desc">콜로세움과 판테온은 외부 관람. 캄피돌리오 언덕에서 포로 로마노를 내려다봅니다. 로마 3대 커피로 꼽히는 <b>타짜 도로</b>도 코스에 있어요.</div>
     </div></li>
     <li class="ev free"><div class="tcol">저녁</div><div class="rail"><span class="dot"></span></div><div class="body">
-      <div class="ttl">자유 석식 (약 90분)</div>
+      <div class="ttl">자유 석식<span class="free-len">90분 · 자비</span></div>
       <div class="desc">식사 후 가이드와 다시 만나 호텔로 이동합니다.</div>
     </div></li>
   </ul>
-  <div class="daynote"><span>숙소 <b>로마 Ergife Palace</b></span><span>식사 <b>조식 호텔 · 중식 포함 · 석식 자유</b></span></div>
+  <div class="daynote"><span>숙소 <b>로마 Ergife Palace</b></span><span class="mb">조식 <span class="m inc">호텔</span></span><span class="mb">중식 <span class="m inc">포함</span></span><span class="mb">석식 <span class="m own">자비 · 90분</span></span></div>
 </section>
 
 <!-- ============ 9/22 ============ -->
@@ -537,7 +605,7 @@ a.pl:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
       <div class="desc">B&amp;B Hotel Firenze Laurus al Duomo · Via de' Cerretani 54/R — 두오모 바로 옆, 역에서 도보 거리입니다. 체크인은 15시라 짐만 맡기고 나오세요.</div>
     </div></li>
     <li class="ev"><div class="tcol">11:30</div><div class="rail"><span class="dot"></span></div><div class="body">
-      <div class="ttl">점심 — Panini Toscani<span class="tag hot">추천</span></div>
+      <div class="ttl">점심 — Panini Toscani<span class="tag hot">추천</span><span class="free-len">자비 · 1인 €6~8</span></div>
       <div class="desc">Piazza del Duomo 34/R · 오늘 촬영 미팅 장소인 <b>파네라이 시계매장 바로 옆</b>입니다. 주문 전에 토스카나 햄과 치즈를 맛보여주고 취향대로 조합해 줍니다. 1인 €6~8, 예약 없이 가면 됩니다.</div>
       <div class="hours">매일 <b>10:00–18:00</b> · 저녁 영업 없음 · <a href="tel:+393355725544">+39 335 572 5544</a></div>
       <div class="warn">촬영 전이니 손 꼭 닦고 가세요. 빵이 일찍 소진되면 문을 닫기도 하니 오후 늦게는 비추천.</div>
@@ -549,7 +617,7 @@ a.pl:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
       <div class="tags"><span class="tag need">시간 엄수</span><span class="tag need">가벼운 차림</span></div>
     </div></li>
     <li class="ev free"><div class="tcol">15:00</div><div class="rail"><span class="dot"></span></div><div class="body">
-      <div class="ttl">호텔 체크인 · 휴식</div>
+      <div class="ttl">호텔 체크인 · 휴식<span class="free-len">자유 15:00~17:00</span></div>
       <div class="desc">저녁에 언덕을 오르니 두어 시간 쉬어두세요. 시간이 남으면 두오모 종탑이나 시뇨리아 광장을 가볍게.</div>
     </div></li>
     <li class="ev"><div class="tcol">17:00</div><div class="rail"><span class="dot"></span></div><div class="body">
@@ -567,7 +635,7 @@ a.pl:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
       <div class="warn">내일은 19:20 기차라 올 수 없습니다. 오늘 저녁이 유일한 기회예요. 성가 시간은 계절에 따라 바뀌니 전날 확인하세요.</div>
     </div></li>
     <li class="ev key"><div class="tcol">20:30</div><div class="rail"><span class="dot"></span></div><div class="body">
-      <div class="ttl">저녁 — I Tarocchi<span class="tag hot">예약</span></div>
+      <div class="ttl">저녁 — I Tarocchi<span class="tag hot">예약</span><span class="free-len">자비 · 1인 €25~35</span></div>
       <div class="desc">Via dei Renai 12/14R · 성당에서 걸어 내려오면 25분. 저온숙성 도우 피자와 토스카나 가정식. 라비올리와 그누디가 평이 좋습니다. 1인 €25~35.</div>
       <div class="hours">화·수 <b>12:00–15:00 / 19:00–24:00</b> · 월 휴무 · <a href="tel:+390552343912">+39 055 234 3912</a></div>
       <div class="desc">일몰(19:13)을 여유 있게 보고 내려와도 되도록 <b>20:30</b>으로 잡았습니다. 이탈리아에서 20:30은 이른 저녁 축에 들어요.</div>
@@ -580,7 +648,7 @@ a.pl:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
       <div class="desc">저녁에 현지 사람들이 모이는 광장이라 분위기가 좋습니다. 내일 08:25 미팅이니 너무 늦지 않게.</div>
     </div></li>
   </ul>
-  <div class="daynote"><span>숙소 <b>피렌체 Laurus al Duomo</b></span><span>식사 <b>조식 호텔 · 중·석식 불포함</b></span><span>저녁 동선 <b>전부 아르노 강 남쪽</b></span></div>
+  <div class="daynote"><span>숙소 <b>피렌체 Laurus al Duomo</b></span><span class="mb">조식 <span class="m inc">호텔</span></span><span class="mb">중식 <span class="m own">자비</span></span><span class="mb">석식 <span class="m own">자비</span></span><span>저녁 동선 <b>전부 아르노 강 남쪽</b></span></div>
 </section>
 
 <!-- ============ 9/23 ============ -->
@@ -607,7 +675,7 @@ a.pl:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
       <div class="desc">산 로렌초 시장이 바로 옆이고 SMN역까지도 도보 10분이라, <b>기차 타기 직전 마지막 코스</b>로도 좋습니다. 앉을 자리는 거의 없어 서서 먹는 집이에요.</div>
     </div></li>
     <li class="ev free"><div class="tcol">오후</div><div class="rail"><span class="dot"></span></div><div class="body">
-      <div class="ttl">자유 일정</div>
+      <div class="ttl">자유 일정<span class="free-len">투어 종료~18:50</span></div>
       <div class="desc">체크아웃 후 짐은 호텔이나 역 보관소에 맡기고 움직이면 편합니다. <b>기차역 짐 보관료는 상품에 포함</b>되어 있어요.</div>
       <div class="desc spot">어제 못 본 곳을 채우기 좋은 시간입니다 — 아카데미아 미술관, 산 로렌초 중앙시장, 또는 가죽제품 쇼핑.</div>
     </div></li>
@@ -627,7 +695,7 @@ a.pl:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
       <div class="desc">Viale Stazione 36, Mestre — <b>메스트레역 바로 앞</b>입니다. 내일 돌로미티 투어 미팅 장소가 이 호텔 정문이라 걸어 나가면 돼요.</div>
     </div></li>
   </ul>
-  <div class="daynote"><span>숙소 <b>베니스 Hotel Plaza Venice</b></span><span>식사 <b>조식 호텔 · 중·석식 불포함</b></span></div>
+  <div class="daynote"><span>숙소 <b>베니스 Hotel Plaza Venice</b></span><span class="mb">조식 <span class="m inc">호텔</span></span><span class="mb">중식 <span class="m own">자비</span></span><span class="mb">석식 <span class="m own">자비 · 기차 안이나 도착 후</span></span></div>
 </section>
 
 <!-- ============ 9/24 ============ -->
@@ -648,10 +716,10 @@ a.pl:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
       <div class="desc">케이블카, 빠쏘 쟈우 정상 등 액티비티 입장료와 중식은 불포함 — 현금을 여유 있게 준비하세요.</div>
     </div></li>
     <li class="ev free"><div class="tcol">저녁</div><div class="rail"><span class="dot"></span></div><div class="body">
-      <div class="ttl">메스트레 복귀 · 석식 자유</div>
+      <div class="ttl">메스트레 복귀 · 석식 자유<span class="free-len">자비</span></div>
     </div></li>
   </ul>
-  <div class="daynote"><span>숙소 <b>베니스 Hotel Plaza Venice</b></span><span>식사 <b>조식 호텔 · 중·석식 불포함</b></span></div>
+  <div class="daynote"><span>숙소 <b>베니스 Hotel Plaza Venice</b></span><span class="mb">조식 <span class="m inc">호텔</span></span><span class="mb">중식 <span class="m own">자비 · 산에서</span></span><span class="mb">석식 <span class="m own">자비</span></span></div>
 </section>
 
 <!-- ============ 9/25 ============ -->
@@ -666,7 +734,7 @@ a.pl:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
       <div class="desc">숙소는 육지 쪽 메스트레입니다. 본섬(산타 루치아역)까지 기차로 약 10분, 버스·트램으로도 갈 수 있어요. 왕복 시간을 감안해 아침 일찍 나가는 편이 좋습니다.</div>
     </div></li>
     <li class="ev free"><div class="tcol">낮</div><div class="rail"><span class="dot"></span></div><div class="body">
-      <div class="ttl">본섬 관광</div>
+      <div class="ttl">본섬 관광<span class="free-len">종일 자유</span></div>
       <div class="desc spot">리알토 다리 · 산 마르코 대성당과 광장 · 두칼레 궁전 · 탄식의 다리 · 사자상. 두칼레 궁전과 산 마르코 대성당은 <b>온라인 사전 예약</b>을 하면 줄을 크게 줄일 수 있습니다.</div>
       <div class="desc spot">시간이 남으면 부라노 섬(색색의 집)이나 무라노 섬(유리공예)까지 바포레토로 다녀올 만합니다. 왕복에 반나절이 듭니다.</div>
     </div></li>
@@ -675,7 +743,7 @@ a.pl:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
       <div class="desc">내일은 08:34 열차라 아침이 이릅니다. 짐 정리를 미리 해두세요. 택스리펀을 받을 물건은 부치지 말고 따로 챙겨두시고요.</div>
     </div></li>
   </ul>
-  <div class="daynote"><span>숙소 <b>베니스 Hotel Plaza Venice</b></span><span>식사 <b>조식 호텔 · 중·석식 불포함</b></span></div>
+  <div class="daynote"><span>숙소 <b>베니스 Hotel Plaza Venice</b></span><span class="mb">조식 <span class="m inc">호텔</span></span><span class="mb">중식 <span class="m own">자비</span></span><span class="mb">석식 <span class="m own">자비</span></span></div>
 </section>
 
 <!-- ============ 9/26 ============ -->
@@ -696,7 +764,7 @@ a.pl:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
       <div class="ttl">FR9466 베니스 → 로마 테르미니 (12:05 도착)</div>
     </div></li>
     <li class="ev free"><div class="tcol">12:15</div><div class="rail"><span class="dot"></span></div><div class="body">
-      <div class="ttl">테르미니역에 짐 맡기고 로마 자유 일정</div>
+      <div class="ttl">테르미니역에 짐 맡기고 로마 자유 일정<span class="free-len">약 4시간</span></div>
       <div class="desc">짐 보관료는 포함입니다. 16:30까지 돌아온다고 보면 <b>약 4시간</b> 쓸 수 있어요.</div>
       <div class="desc spot">역에서 가까운 곳으로 — 산타 마리아 마조레 대성당은 도보 10분 거리이고, 콜로세움은 지하철 B선으로 두 정거장입니다. 21일에 외부만 봤던 콜로세움 내부를 보려면 사전 예약이 필요합니다. 무리하지 않고 점심과 젤라토로 마무리하는 것도 좋은 선택이에요.</div>
     </div></li>
@@ -713,7 +781,7 @@ a.pl:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
       <div class="ttl">KE932 로마 출발</div>
     </div></li>
   </ul>
-  <div class="daynote"><span>식사 <b>조식 호텔 · 이후 기내식</b></span></div>
+  <div class="daynote"><span class="mb">조식 <span class="m inc">호텔</span></span><span class="mb">중식 <span class="m own">자비</span></span><span class="mb">석식 <span class="m air">기내</span></span></div>
 </section>
 
 <!-- ============ 9/27 ============ -->
@@ -1481,8 +1549,15 @@ a.pl:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
       if(p) p.hidden = (t !== name);
     });
     buttons.forEach(function(b){ b.setAttribute("aria-selected", String(b.dataset.tab === name)); });
-    if(push && location.hash !== "#" + name){ history.pushState(null, "", "#" + name); }
-    window.scrollTo(0, 0);
+    // a sandboxed viewer (artifact iframe) refuses pushState — never let it
+    // abort the rest of the switch
+    if(push){
+      try{
+        if(location.hash !== "#" + name) history.pushState(null, "", "#" + name);
+      }catch(e){ /* no URL to update here; the tab still switched */ }
+    }
+    try{ window.scrollTo(0, 0); }catch(e){}
+    if(document.scrollingElement) document.scrollingElement.scrollTop = 0;
   }
   buttons.forEach(function(b){
     b.addEventListener("click", function(){ show(b.dataset.tab, true); });
