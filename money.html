@@ -173,6 +173,7 @@ svg.chart g.bk:hover rect.bar{opacity:.8}
 
 </head>
 <body>
+<script>window.LEDGER_SEED={"settings": {"cats": [{"color": "#2a78d6", "id": "c1", "name": "식비", "type": "expense"}, {"color": "#eb6834", "id": "c2", "name": "카페·간식", "type": "expense"}, {"color": "#1baf7a", "id": "c3", "name": "생활용품", "type": "expense"}, {"color": "#eda100", "id": "c4", "name": "주거·관리비", "type": "expense"}, {"color": "#e87ba4", "id": "c5", "name": "교통", "type": "expense"}, {"color": "#008300", "id": "c6", "name": "의료·건강", "type": "expense"}, {"color": "#4a3aa7", "id": "c7", "name": "쇼핑·의류", "type": "expense"}, {"color": "#e34948", "id": "c8", "name": "문화·여가", "type": "expense"}, {"color": "#7a5c3e", "id": "c9", "name": "경조사·선물", "type": "expense"}, {"color": "#6b7280", "id": "c10", "name": "기타지출", "type": "expense"}, {"id": "c24", "name": "신혼여행", "type": "expense", "color": "#c46aa0"}, {"color": "#2a78d6", "id": "c11", "name": "급여", "type": "income"}, {"color": "#1baf7a", "id": "c12", "name": "부수입", "type": "income"}, {"color": "#e87ba4", "id": "c13", "name": "용돈·지원", "type": "income"}, {"color": "#6b7280", "id": "c14", "name": "기타수입", "type": "income"}, {"color": "#1baf7a", "id": "c15", "name": "1년 적금 (100만)", "type": "saving"}, {"color": "#5a9bd5", "id": "c20", "name": "6개월 적금 (50만)", "type": "saving"}, {"color": "#008300", "id": "c21", "name": "3년 적금 (30만)", "type": "saving"}, {"color": "#4a3aa7", "id": "c22", "name": "연금 ETF", "type": "saving"}, {"color": "#eb6834", "id": "c23", "name": "미국 주식", "type": "saving"}, {"color": "#2a78d6", "id": "c16", "name": "예금", "type": "saving"}, {"color": "#7a5c3e", "id": "c19", "name": "경조사비 적립", "type": "saving"}, {"color": "#c46aa0", "id": "c17", "name": "투자", "type": "saving"}, {"color": "#eda100", "id": "c18", "name": "비상금", "type": "saving"}], "members": ["나", "배우자"], "recurring": [{"amount": 200000, "cat": "c19", "day": 1, "id": "gyeongjo", "memo": "경조사비 자동이체", "start": "2026-10", "type": "saving", "who": "나"}, {"amount": 1000000, "cat": "c15", "day": 1, "end": "2027-08", "id": "save1y", "memo": "연 3.65% 세전 · 2026-09 시작", "start": "2026-10", "type": "saving", "who": "나"}, {"amount": 500000, "cat": "c20", "day": 10, "end": "2026-12", "id": "save6m", "memo": "6개월 적금 · 2026-07-10 시작 · 2027-01-10 만기", "start": "2026-07", "type": "saving", "who": "나"}, {"amount": 300000, "cat": "c21", "day": 2, "end": "2028-06", "id": "save3y", "memo": "3년 적금 · 2025-07-02 시작 · 2028-07-02 만기", "start": "2025-07", "type": "saving", "who": "나"}, {"amount": 500000, "cat": "c22", "day": 1, "id": "pension", "memo": "연금계좌 ETF", "start": "2026-09", "type": "saving", "who": "나"}, {"amount": 550000, "cat": "c23", "day": 1, "id": "usstock", "memo": "미국 주식", "start": "2026-09", "type": "saving", "who": "나"}], "skipped": [], "rates": {}}, "months": {"2026-09": [{"id": "gj-open", "date": "2026-09-01", "type": "saving", "cat": "c19", "amount": 300000, "memo": "경조사비 기존 적립금 (9월까지 모은 금액)", "who": "나", "ts": 1756652400000}, {"id": "sv2609a", "date": "2026-09-18", "type": "saving", "cat": "c15", "amount": 1000000, "memo": "1년 적금 시작 · 연 3.65% 세전 · 1회차", "who": "나", "ts": 1758169800000}, {"id": "sv2609b", "date": "2026-09-18", "type": "saving", "cat": "c16", "amount": 2150000, "memo": "9월 저금 나머지 (500만 중 적금·투자 제외분)", "who": "나", "ts": 1758169800001}]}};</script>
 <div class="app">
   <header class="top">
     <div class="brand">우리집 가계부<small>household ledger</small></div>
@@ -203,6 +204,9 @@ const ym = d => d.slice(0,7);
 const uid = () => Math.random().toString(36).slice(2,10) + Date.now().toString(36);
 const WD = ['일','월','화','수','목','금','토'];
 const SW = ['#2a78d6','#eb6834','#1baf7a','#eda100','#e87ba4','#008300','#4a3aa7','#e34948','#7a5c3e','#5a9bd5','#c46aa0','#6b7280'];
+const CURS=[['KRW','₩','원'],['EUR','€','유로'],['USD','$','달러'],['JPY','¥','엔'],['GBP','£','파운드'],['CNY','¥','위안'],['THB','฿','바트'],['VND','₫','동'],['CHF','Fr','프랑'],['AUD','A$','호주달러']];
+const curSym = c => (CURS.find(x=>x[0]===c)||[c,c])[1];
+const fxText = t => t.fx ? `${curSym(t.fx.cur)}${Number(t.fx.amt).toLocaleString('ko-KR',{maximumFractionDigits:2})} · 환율 ${Number(t.fx.rate).toLocaleString('ko-KR',{maximumFractionDigits:2})}` : null;
 const esc = s => String(s??'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
 const DEFAULT_CATS = [
@@ -214,7 +218,7 @@ const DEFAULT_CATS = [
 // ---------- state ----------
 const S = {
   tab:'home', month: ym(today()), homeView:(function(){try{return localStorage.getItem('ledger.homeView')||'list'}catch(e){return 'list'}})(), selDay: today(),
-  cats: null, members: ['나','배우자'], recurring: [], skipped: [],
+  cats: null, members: ['나','배우자'], recurring: [], skipped: [], rates: {},
   months: new Map(),       // 'YYYY-MM' -> items[]
   settingsLoaded:false, monthsLoaded:false,
   stats:{ mode:'month', date: today(), month: ym(today()), year: today().slice(0,4), kind:'expense' },
@@ -230,16 +234,17 @@ function lsSet(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e
 async function saveMonth(key, items){
   S.months.set(key, items); S.sample=false; render();
   if (S.storage==='db') {
-    return chain('m'+key, async()=>{ try { await S.db.doc('months/'+key).set({items}); } catch(e){ toast('저장에 실패했어요. 잠시 후 다시 시도해 주세요.'); } });
-  } else { const all = lsGet('ledger.months')||{}; all[key]=items; lsSet('ledger.months', all); }
+    return chain('m'+key, async()=>{ try { await S.db.doc('months/'+key).set({items}); markSaved(); } catch(e){ toast('저장에 실패했어요. 잠시 후 다시 시도해 주세요.'); } });
+  } else { const all = lsGet('ledger.months')||{}; all[key]=items; lsSet('ledger.months', all); markSaved(); }
 }
 async function saveSettings(){
-  const body = {cats:S.cats, members:S.members, recurring:S.recurring, skipped:S.skipped}; render();
-  if (S.storage==='db') return chain('settings', async()=>{ try { await S.db.doc('settings/main').set(body); } catch(e){ toast('저장에 실패했어요.'); } });
-  else lsSet('ledger.settings', body);
+  const body = {cats:S.cats, members:S.members, recurring:S.recurring, skipped:S.skipped, rates:S.rates}; render();
+  if (S.storage==='db') return chain('settings', async()=>{ try { await S.db.doc('settings/main').set(body); markSaved(); } catch(e){ toast('저장에 실패했어요.'); } });
+  else { lsSet('ledger.settings', body); markSaved(); }
 }
 
 function setSync(on, text){ const s=$('#sync'); s.classList.toggle('on',on); s.querySelector('span').textContent=text; }
+let savedT; function markSaved(){ const d=new Date(); const t=`${pad(d.getHours())}:${pad(d.getMinutes())}`; const el0=$('#sync span'); const base=S.storage==='db'?'부부 공용':'이 기기에 저장'; el0.textContent=`${base} · 저장됨 ${t}`; }
 
 async function init(){
   const db = window.claude && window.claude.use ? await window.claude.use('db').catch(()=>null) : null;
@@ -249,7 +254,7 @@ async function init(){
       const d = snap.exists ? snap.data() : null;
       S.cats = (d && Array.isArray(d.cats) && d.cats.length) ? d.cats : (S.cats || DEFAULT_CATS.map(c=>({...c})));
       if (d && Array.isArray(d.members)) S.members = d.members;
-      S.recurring = (d && Array.isArray(d.recurring)) ? d.recurring : []; S.skipped = (d && Array.isArray(d.skipped)) ? d.skipped : [];
+      S.recurring = (d && Array.isArray(d.recurring)) ? d.recurring : []; S.skipped = (d && Array.isArray(d.skipped)) ? d.skipped : []; S.rates = (d && d.rates) ? d.rates : {};
       S.settingsLoaded=true; render(); applyRecurring();
     }, e=>{ setSync(false,'동기화 오류'); });
     db.collection('months').onSnapshot(snap=>{
@@ -258,8 +263,10 @@ async function init(){
     }, e=>{ setSync(false,'동기화 오류'); });
   } else {
     S.storage='local'; setSync(false,'이 기기에만 저장');
-    const st = lsGet('ledger.settings'); S.cats = (st && st.cats && st.cats.length) ? st.cats : DEFAULT_CATS.map(c=>({...c})); if (st && st.members) S.members=st.members; if (st && st.recurring) S.recurring=st.recurring; if (st && st.skipped) S.skipped=st.skipped;
-    const all = lsGet('ledger.months')||{}; S.months = new Map(Object.entries(all));
+    let st = lsGet('ledger.settings'); let all = lsGet('ledger.months');
+    if (!st && !all && window.LEDGER_SEED) { st = window.LEDGER_SEED.settings; all = window.LEDGER_SEED.months; lsSet('ledger.settings', st); lsSet('ledger.months', all); }
+    S.cats = (st && st.cats && st.cats.length) ? st.cats : DEFAULT_CATS.map(c=>({...c})); if (st && st.members) S.members=st.members; if (st && st.recurring) S.recurring=st.recurring; if (st && st.skipped) S.skipped=st.skipped; if (st && st.rates) S.rates=st.rates;
+    S.months = new Map(Object.entries(all||{}));
     S.settingsLoaded=S.monthsLoaded=true; render(); applyRecurring();
   }
 }
@@ -370,7 +377,7 @@ function viewHome(){
 function itemList(arr){
   return el('div',{class:'items'}, arr.map(t=>{ const c=catOf(t.cat); return el('button',{class:'item'+(t.date>today()?' sched':''),onclick:()=>openForm(t)},
     el('span',{class:'dot',style:`background:${c.color}`}),
-    el('span',{class:'c'}, el('div',{class:'n'}, c.name), el('div',{class:'m'}, [t.auto?'매달 반복':null, t.who, t.memo].filter(Boolean).join(' · ') || ' ')),
+    el('span',{class:'c'}, el('div',{class:'n'}, c.name), el('div',{class:'m'}, [t.auto?'매달 반복':null, fxText(t), t.who, t.memo].filter(Boolean).join(' · ') || ' ')),
     el('span',{class:`a num ${t.type==='income'?'inc':t.type==='saving'?'sav':'exp'}`}, (t.type==='income'?'+':t.type==='saving'?'':'−')+won(t.amount))); }));
 }
 function dayHeader(date, arr){
@@ -521,6 +528,7 @@ function viewCats(){
       el('span',{class:'n'}, `매월 ${r.day}일 · ${c.name} `, el('b',{class:'num'}, won(r.amount)), el('small',{}, [TYPE_LABEL[r.type], r.memo, r.start+'부터'+(r.end?' '+r.end+'까지':'')].filter(Boolean).join(' · '))),
       el('span',{class:'ops'}, el('button',{'aria-label':'수정',onclick:()=>openRecForm(r)},'✎'))); }))
     : el('p',{class:'subtle',style:'margin:0'},'자동이체처럼 매달 같은 날 반복되는 내역을 등록하면, 그 달이 되면 자동으로 기록돼요.')));
+  { const rs=Object.entries(S.rates); if (rs.length) wrap.append(el('div',{class:'card'}, el('h3',{},'기억된 환율', el('span',{},'마지막 입력값')), el('div',{class:'row'}, rs.map(([c,r])=>el('span',{class:'chip num'}, `1 ${c} = ${Number(r).toLocaleString('ko-KR')}원`))), el('p',{class:'subtle'},'외화로 입력할 때 마지막에 쓴 환율이 자동으로 채워지고, 고치면 그 값을 기억해요. 합계와 그래프는 모두 원화 기준이에요.'))); }
   wrap.append(el('div',{class:'card'}, el('h3',{},'우리 이름'),
     el('div',{class:'row'}, S.members.map((m,i)=>el('input',{value:m,'aria-label':`이름 ${i+1}`,id:'member'+i,style:'flex:1;min-width:120px;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:9px 12px',onchange:e=>{S.members[i]=e.target.value.trim()||m; saveSettings();}}))),
     el('p',{class:'subtle'},'내역을 입력할 때 누가 썼는지 고를 수 있어요.')));
@@ -597,8 +605,18 @@ function openForm(t){
   const isNew=!t || String(t.id).startsWith('s');
   const d = t && !isNew ? {...t} : {id:uid(), date: (t&&t.date)|| (S.tab==='stats'&&S.stats.mode==='day'?S.stats.date: S.homeView==='cal'&&S.selDay.startsWith(S.month)?S.selDay: (ym(today())===S.month?today():S.month+'-01')), type:(t&&t.type)||'expense', cat:(t&&t.cat)||'', amount:(t&&t.amount)||0, memo:(t&&t.memo)||'', who:(t&&t.who)||S.members[0], ts:Date.now()};
   const origMonth = isNew?null:ym(t.date);
-  const amt=el('input',{id:'tx-amount',class:'amt num',inputmode:'numeric',placeholder:'0',value:d.amount?d.amount.toLocaleString('ko-KR'):''});
-  amt.addEventListener('input',()=>{ const v=amt.value.replace(/[^\d]/g,''); amt.value=v?Number(v).toLocaleString('ko-KR'):''; });
+  let cur = d.fx ? d.fx.cur : 'KRW';
+  const amt=el('input',{id:'tx-amount',class:'amt num',inputmode:'decimal',placeholder:'0',value: d.fx ? String(d.fx.amt) : (d.amount?d.amount.toLocaleString('ko-KR'):'')});
+  const rate=el('input',{id:'tx-rate',class:'num',inputmode:'decimal',placeholder:'1 단위당 원',value: d.fx ? String(d.fx.rate) : ''});
+  const conv=el('div',{class:'subtle',style:'margin:0'});
+  const fxRow=el('div',{class:'row',hidden:'' }, el('div',{class:'field',style:'flex:1;margin:0'}, el('label',{for:'tx-rate'},'환율 (1 단위 = ? 원)'), rate), el('div',{style:'flex:1;padding-top:18px'}, conv));
+  const curBox=el('div',{class:'chips'});
+  const parseAmt=()=>{ const v=amt.value.replace(/[^\d.]/g,''); return Number(v)||0; };
+  const updateConv=()=>{ if (cur==='KRW') { conv.textContent=''; return; } const k=Math.round(parseAmt()*(Number(rate.value)||0)); conv.innerHTML = k ? `= <b>${won(k)}</b>` : ''; };
+  const drawCur=()=>{ curBox.replaceChildren(...CURS.map(([c,sym,name])=>el('button',{class:'chip'+(c===cur?' on':''),onclick:()=>{ if (cur===c) return; cur=c; amt.value=''; if (c!=='KRW') rate.value = S.rates[c] ? String(S.rates[c]) : ''; fxRow.hidden = c==='KRW'; amt.inputmode = c==='KRW'?'numeric':'decimal'; drawCur(); updateConv(); amt.focus(); }}, `${sym} ${name}`)), el('button',{class:'chip',onclick:()=>{ const code=prompt('통화 코드 (예: CZK, HUF)'); if(!code) return; cur=code.trim().toUpperCase().slice(0,4); rate.value=S.rates[cur]?String(S.rates[cur]):''; fxRow.hidden=false; drawCur(); updateConv(); }}, '+ 기타')); if (!CURS.some(x=>x[0]===cur)) curBox.insertBefore(el('button',{class:'chip on'}, cur), curBox.lastChild); };
+  fxRow.hidden = cur==='KRW'; drawCur();
+  amt.addEventListener('input',()=>{ if (cur==='KRW') { const v=amt.value.replace(/[^\d]/g,''); amt.value=v?Number(v).toLocaleString('ko-KR'):''; } else { amt.value=amt.value.replace(/[^\d.]/g,''); } updateConv(); });
+  rate.addEventListener('input',updateConv); updateConv();
   const date=el('input',{id:'tx-date',type:'date',value:d.date});
   const memo=el('input',{id:'tx-memo',value:d.memo,placeholder:'메모 (선택)',maxlength:'60'});
   const catBox=el('div',{class:'chips'}); const whoBox=el('div',{class:'chips'});
@@ -607,16 +625,21 @@ function openForm(t){
   drawCats(); drawWho();
   const seg=typeSeg(d.type, t=>{ d.type=t; drawCats(); });
   const save=async()=>{
-    const v=Number(amt.value.replace(/[^\d]/g,'')); if(!v){ amt.focus(); return; } if(!date.value){ date.focus(); return; } if(!d.cat){ toast('항목을 먼저 추가해 주세요.'); return; }
-    const item={id:d.id,date:date.value,type:d.type,cat:d.cat,amount:v,memo:memo.value.trim(),who:d.who,ts:d.ts};
+    let v, fx=null;
+    if (cur==='KRW') { v=Number(amt.value.replace(/[^\d]/g,'')); }
+    else { const fa=parseAmt(); const r=Number(rate.value)||0; if(!fa){ amt.focus(); return; } if(!r){ rate.focus(); toast('환율을 입력해 주세요.'); return; } v=Math.round(fa*r); fx={cur,amt:fa,rate:r}; if (S.rates[cur]!==r) { S.rates={...S.rates,[cur]:r}; saveSettings(); } }
+    if(!v){ amt.focus(); return; } if(!date.value){ date.focus(); return; } if(!d.cat){ toast('항목을 먼저 추가해 주세요.'); return; }
+    const item={id:d.id,date:date.value,type:d.type,cat:d.cat,amount:v,memo:memo.value.trim(),who:d.who,ts:d.ts}; if (fx) item.fx=fx;
     const key=ym(item.date);
     if (origMonth && origMonth!==key) await saveMonth(origMonth, (S.months.get(origMonth)||[]).filter(x=>x.id!==item.id));
-    const cur=(S.months.get(key)||[]).filter(x=>x.id!==item.id); cur.push(item);
+    const list=(S.months.get(key)||[]).filter(x=>x.id!==item.id); list.push(item);
     S.month=key; S.selDay=item.date; if (S.stats.mode==='day') S.stats.date=item.date; S.stats.month=key; S.stats.year=key.slice(0,4);
-    await saveMonth(key, cur); closeSheet(); toast(isNew?'저장했어요':'수정했어요');
+    await saveMonth(key, list); closeSheet(); toast(isNew?'저장했어요':'수정했어요');
   };
   const body=el('div',{}, seg,
-    el('div',{class:'field'}, el('label',{for:'tx-amount'},'금액 (원)'), amt),
+    el('div',{class:'field'}, el('label',{},'통화'), curBox),
+    el('div',{class:'field'}, el('label',{for:'tx-amount'},'금액'), amt),
+    el('div',{class:'field'}, fxRow),
     el('div',{class:'field'}, el('label',{},'항목'), catBox),
     el('div',{class:'field'}, el('label',{for:'tx-date'},'날짜'), date),
     el('div',{class:'field'}, el('label',{},'누가'), whoBox),
