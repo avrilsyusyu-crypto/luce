@@ -173,6 +173,35 @@ svg.chart g.bk:hover rect.bar{opacity:.8}
 
 </head>
 <body>
+<!-- ============================================================
+     ① 부부 실시간 동기화 (Firebase) 설정
+     Firebase 콘솔에서 복사한 firebaseConfig 를 아래 null 자리에 붙여 넣으세요.
+     비워 두면(null) 이 기기에만 저장되는 모드로 동작합니다.
+     ============================================================ -->
+<script>
+window.FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCvjTVy-3qUJA_tnIR63wsB4FwdlYchPFE",
+  authDomain: "luce-mo.firebaseapp.com",
+  databaseURL: "https://luce-mo-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "luce-mo",
+  storageBucket: "luce-mo.firebasestorage.app",
+  messagingSenderId: "803626990752",
+  appId: "1:803626990752:web:9aae4c30f12b75bd059dc5"
+};
+/* 예시 (본인 값으로 교체):
+window.FIREBASE_CONFIG = {
+  apiKey: "AIza....",
+  authDomain: "luce-ledger.firebaseapp.com",
+  databaseURL: "https://luce-ledger-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "luce-ledger",
+  appId: "1:1234567890:web:abcdef"
+};
+*/
+</script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<!-- ② 처음 열 때 넣어 둘 기본 데이터 (항목·반복 저축·9월 기록) -->
 <script>window.LEDGER_SEED={"settings": {"cats": [{"color": "#2a78d6", "id": "c1", "name": "식비", "type": "expense"}, {"color": "#eb6834", "id": "c2", "name": "카페·간식", "type": "expense"}, {"color": "#1baf7a", "id": "c3", "name": "생활용품", "type": "expense"}, {"color": "#eda100", "id": "c4", "name": "주거·관리비", "type": "expense"}, {"color": "#e87ba4", "id": "c5", "name": "교통", "type": "expense"}, {"color": "#008300", "id": "c6", "name": "의료·건강", "type": "expense"}, {"color": "#4a3aa7", "id": "c7", "name": "쇼핑·의류", "type": "expense"}, {"color": "#e34948", "id": "c8", "name": "문화·여가", "type": "expense"}, {"color": "#7a5c3e", "id": "c9", "name": "경조사·선물", "type": "expense"}, {"color": "#6b7280", "id": "c10", "name": "기타지출", "type": "expense"}, {"id": "c24", "name": "신혼여행", "type": "expense", "color": "#c46aa0"}, {"color": "#2a78d6", "id": "c11", "name": "급여", "type": "income"}, {"color": "#1baf7a", "id": "c12", "name": "부수입", "type": "income"}, {"color": "#e87ba4", "id": "c13", "name": "용돈·지원", "type": "income"}, {"color": "#6b7280", "id": "c14", "name": "기타수입", "type": "income"}, {"color": "#1baf7a", "id": "c15", "name": "1년 적금 (100만)", "type": "saving"}, {"color": "#5a9bd5", "id": "c20", "name": "6개월 적금 (50만)", "type": "saving"}, {"color": "#008300", "id": "c21", "name": "3년 적금 (30만)", "type": "saving"}, {"color": "#4a3aa7", "id": "c22", "name": "연금 ETF", "type": "saving"}, {"color": "#eb6834", "id": "c23", "name": "미국 주식", "type": "saving"}, {"color": "#2a78d6", "id": "c16", "name": "예금", "type": "saving"}, {"color": "#7a5c3e", "id": "c19", "name": "경조사비 적립", "type": "saving"}, {"color": "#c46aa0", "id": "c17", "name": "투자", "type": "saving"}, {"color": "#eda100", "id": "c18", "name": "비상금", "type": "saving"}], "members": ["나", "배우자"], "recurring": [{"amount": 200000, "cat": "c19", "day": 1, "id": "gyeongjo", "memo": "경조사비 자동이체", "start": "2026-10", "type": "saving", "who": "나"}, {"amount": 1000000, "cat": "c15", "day": 1, "end": "2027-08", "id": "save1y", "memo": "연 3.65% 세전 · 2026-09 시작", "start": "2026-10", "type": "saving", "who": "나"}, {"amount": 500000, "cat": "c20", "day": 10, "end": "2026-12", "id": "save6m", "memo": "6개월 적금 · 2026-07-10 시작 · 2027-01-10 만기", "start": "2026-07", "type": "saving", "who": "나"}, {"amount": 300000, "cat": "c21", "day": 2, "end": "2028-06", "id": "save3y", "memo": "3년 적금 · 2025-07-02 시작 · 2028-07-02 만기", "start": "2025-07", "type": "saving", "who": "나"}, {"amount": 500000, "cat": "c22", "day": 1, "id": "pension", "memo": "연금계좌 ETF", "start": "2026-09", "type": "saving", "who": "나"}, {"amount": 550000, "cat": "c23", "day": 1, "id": "usstock", "memo": "미국 주식", "start": "2026-09", "type": "saving", "who": "나"}], "skipped": [], "rates": {}}, "months": {"2026-09": [{"id": "gj-open", "date": "2026-09-01", "type": "saving", "cat": "c19", "amount": 300000, "memo": "경조사비 기존 적립금 (9월까지 모은 금액)", "who": "나", "ts": 1756652400000}, {"id": "sv2609a", "date": "2026-09-18", "type": "saving", "cat": "c15", "amount": 1000000, "memo": "1년 적금 시작 · 연 3.65% 세전 · 1회차", "who": "나", "ts": 1758169800000}, {"id": "sv2609b", "date": "2026-09-18", "type": "saving", "cat": "c16", "amount": 2150000, "memo": "9월 저금 나머지 (500만 중 적금·투자 제외분)", "who": "나", "ts": 1758169800001}]}};</script>
 <div class="app">
   <header class="top">
@@ -235,16 +264,19 @@ async function saveMonth(key, items){
   S.months.set(key, items); S.sample=false; render();
   if (S.storage==='db') {
     return chain('m'+key, async()=>{ try { await S.db.doc('months/'+key).set({items}); markSaved(); } catch(e){ toast('저장에 실패했어요. 잠시 후 다시 시도해 주세요.'); } });
+  } else if (S.storage==='fb') {
+    return chain('m'+key, async()=>{ try { await S.fb.ref(`ledgers/${S.fbCode}/months/${key}`).set({items}); markSaved(); } catch(e){ toast('저장에 실패했어요. 인터넷 연결을 확인해 주세요.'); } });
   } else { const all = lsGet('ledger.months')||{}; all[key]=items; lsSet('ledger.months', all); markSaved(); }
 }
 async function saveSettings(){
   const body = {cats:S.cats, members:S.members, recurring:S.recurring, skipped:S.skipped, rates:S.rates}; render();
   if (S.storage==='db') return chain('settings', async()=>{ try { await S.db.doc('settings/main').set(body); markSaved(); } catch(e){ toast('저장에 실패했어요.'); } });
+  else if (S.storage==='fb') return chain('settings', async()=>{ try { await S.fb.ref(`ledgers/${S.fbCode}/settings`).set(body); markSaved(); } catch(e){ toast('저장에 실패했어요.'); } });
   else { lsSet('ledger.settings', body); markSaved(); }
 }
 
 function setSync(on, text){ const s=$('#sync'); s.classList.toggle('on',on); s.querySelector('span').textContent=text; }
-let savedT; function markSaved(){ const d=new Date(); const t=`${pad(d.getHours())}:${pad(d.getMinutes())}`; const el0=$('#sync span'); const base=S.storage==='db'?'부부 공용':'이 기기에 저장'; el0.textContent=`${base} · 저장됨 ${t}`; }
+let savedT; function markSaved(){ const d=new Date(); const t=`${pad(d.getHours())}:${pad(d.getMinutes())}`; const el0=$('#sync span'); const base=S.storage==='db'?'부부 공용':S.storage==='fb'?'부부 공용':'이 기기에 저장'; el0.textContent=`${base} · 저장됨 ${t}`; }
 
 async function init(){
   const db = window.claude && window.claude.use ? await window.claude.use('db').catch(()=>null) : null;
@@ -261,16 +293,54 @@ async function init(){
       const m = new Map(); snap.docs.forEach(d=>{ const b=d.data(); if (b && Array.isArray(b.items)) m.set(d.id, b.items); });
       S.months = m; S.monthsLoaded=true; render(); applyRecurring();
     }, e=>{ setSync(false,'동기화 오류'); });
+  } else if (window.FIREBASE_CONFIG && typeof firebase!=='undefined') {
+    await initFirebase();
   } else {
     S.storage='local'; setSync(false,'이 기기에만 저장');
-    let st = lsGet('ledger.settings'); let all = lsGet('ledger.months');
-    if (!st && !all && window.LEDGER_SEED) { st = window.LEDGER_SEED.settings; all = window.LEDGER_SEED.months; lsSet('ledger.settings', st); lsSet('ledger.months', all); }
-    S.cats = (st && st.cats && st.cats.length) ? st.cats : DEFAULT_CATS.map(c=>({...c})); if (st && st.members) S.members=st.members; if (st && st.recurring) S.recurring=st.recurring; if (st && st.skipped) S.skipped=st.skipped; if (st && st.rates) S.rates=st.rates;
-    S.months = new Map(Object.entries(all||{}));
-    S.settingsLoaded=S.monthsLoaded=true; render(); applyRecurring();
+    initLocal();
   }
 }
 
+// ---------- firebase (GitHub 버전 공용 저장소) ----------
+function applySettingsDoc(d){
+  S.cats = (d && Array.isArray(d.cats) && d.cats.length) ? d.cats : (S.cats || DEFAULT_CATS.map(c=>({...c})));
+  if (d && Array.isArray(d.members)) S.members = d.members;
+  S.recurring = (d && Array.isArray(d.recurring)) ? d.recurring : []; S.skipped = (d && Array.isArray(d.skipped)) ? d.skipped : []; S.rates = (d && d.rates) ? d.rates : {};
+}
+function askFamilyCode(existing){
+  const v = prompt('부부가 함께 쓸 가족 코드를 정해 주세요.\n두 분이 같은 코드를 입력하면 같은 가계부를 보게 돼요.\n(영문·숫자 6자 이상, 추측하기 어렵게)', existing||'');
+  if (v===null) return existing||null;
+  const code=v.trim().replace(/[^A-Za-z0-9_-]/g,'');
+  if (code.length<6) { toast('6자 이상으로 정해 주세요.'); return askFamilyCode(existing); }
+  return code;
+}
+async function initFirebase(){
+  try {
+    if (!firebase.apps.length) firebase.initializeApp(window.FIREBASE_CONFIG);
+    setSync(false,'연결 중');
+    await firebase.auth().signInAnonymously();
+    let code=null; try { code=localStorage.getItem('ledger.familyCode'); } catch(e){}
+    if (!code) { code=askFamilyCode(null); if (!code) { S.storage='local'; setSync(false,'이 기기에만 저장'); return initLocal(); } try{ localStorage.setItem('ledger.familyCode',code); }catch(e){} }
+    S.fb=firebase.database(); S.fbCode=code; S.storage='fb';
+    const root=S.fb.ref(`ledgers/${code}`);
+    // first use: seed from this device's local data or the built-in seed
+    const first=await root.child('settings').get();
+    if (!first.exists()) {
+      const st = lsGet('ledger.settings') || (window.LEDGER_SEED && window.LEDGER_SEED.settings) || {cats:DEFAULT_CATS, members:S.members, recurring:[], skipped:[], rates:{}};
+      const all = lsGet('ledger.months') || (window.LEDGER_SEED && window.LEDGER_SEED.months) || {};
+      await root.child('settings').set(st); if (Object.keys(all).length) await root.child('months').set(all);
+    }
+    root.child('settings').on('value', snap=>{ applySettingsDoc(snap.val()); S.settingsLoaded=true; render(); applyRecurring(); }, err=>setSync(false,'동기화 오류'));
+    root.child('months').on('value', snap=>{ const v=snap.val()||{}; const m=new Map(); for (const [k,b] of Object.entries(v)) if (b && Array.isArray(b.items)) m.set(k,b.items); S.months=m; S.monthsLoaded=true; render(); applyRecurring(); }, err=>setSync(false,'동기화 오류'));
+    S.fb.ref('.info/connected').on('value', snap=>{ if (snap.val()) setSync(true,'부부 공용 · 실시간 동기화'); else setSync(false,'오프라인 · 연결되면 자동 반영'); });
+  } catch(e) { console.error(e); S.storage='local'; setSync(false,'이 기기에만 저장 (연동 실패)'); initLocal(); }
+}
+function initLocal(){
+  let st = lsGet('ledger.settings'); let all = lsGet('ledger.months');
+  if (!st && !all && window.LEDGER_SEED) { st = window.LEDGER_SEED.settings; all = window.LEDGER_SEED.months; lsSet('ledger.settings', st); lsSet('ledger.months', all); }
+  applySettingsDoc(st); S.months = new Map(Object.entries(all||{}));
+  S.settingsLoaded=S.monthsLoaded=true; render(); applyRecurring();
+}
 // ---------- recurring ----------
 let applying=false;
 async function applyRecurring(){
@@ -537,7 +607,11 @@ function viewCats(){
       el('button',{class:'btn',onclick:exportJson},'파일로 내보내기'),
       el('label',{class:'btn',style:'cursor:pointer'},'파일 가져오기', el('input',{type:'file',accept:'application/json,.json',id:'import-file',style:'display:none',onchange:importJson}))),
     el('p',{class:'subtle'},'내보낸 파일을 배우자 기기에서 가져오면 같은 내역을 볼 수 있어요. 가져오기는 기존 내역과 합쳐지고, 같은 내역은 중복되지 않아요.')));
-  wrap.append(el('div',{class:'card'}, el('h3',{},'저장 위치'), el('p',{class:'subtle',style:'margin:0'}, S.storage==='db' ? '이 페이지를 열 수 있는 두 사람 모두 같은 내역을 보고, 입력하면 상대방 화면에도 바로 반영돼요.' : '지금은 이 기기의 브라우저에만 저장돼요. 공용 저장소에 연결되면 두 사람이 함께 볼 수 있어요.')));
+  wrap.append(el('div',{class:'card'}, el('h3',{},'저장 위치'),
+    el('p',{class:'subtle',style:'margin:0'}, S.storage==='db' ? '이 페이지를 열 수 있는 두 사람 모두 같은 내역을 보고, 입력하면 상대방 화면에도 바로 반영돼요.'
+      : S.storage==='fb' ? `가족 코드 "${S.fbCode}" 로 연결된 부부 공용 저장소예요. 배우자 폰에서 같은 코드를 입력하면 같은 내역을 실시간으로 봐요.`
+      : '지금은 이 기기의 브라우저에만 저장돼요. 공용 저장소에 연결되면 두 사람이 함께 볼 수 있어요.'),
+    S.storage==='fb' ? el('div',{class:'row',style:'margin-top:10px'}, el('button',{class:'btn sm',onclick:()=>{ const c=askFamilyCode(S.fbCode); if (c && c!==S.fbCode) { try{localStorage.setItem('ledger.familyCode',c);}catch(e){} location.reload(); } }},'가족 코드 바꾸기')) : null));
   return wrap;
 }
 function exportJson(){
