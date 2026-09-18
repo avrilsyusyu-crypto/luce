@@ -627,7 +627,7 @@ function viewCats(){
   wrap.append(el('div',{class:'card'}, el('h3',{},'매달 반복', el('button',{class:'btn sm',onclick:()=>openRecForm(null)},'+ 추가')),
     S.recurring.length ? el('div',{class:'catlist'}, S.recurring.map(r=>{ const c=catOf(r.cat); return el('div',{class:'catrow'},
       el('span',{class:'dot',style:`background:${c.color}`}),
-      el('span',{class:'n'}, `매월 ${r.day}일 · ${c.name} `, el('b',{class:'num'}, won(r.amount)), el('small',{}, [TYPE_LABEL[r.type], r.memo, r.start+'부터'+(r.end?' '+r.end+'까지':'')].filter(Boolean).join(' · '))),
+      el('span',{class:'n'}, `매월 ${r.day}일 · ${c.name} `, el('b',{class:'num'}, won(r.amount)), el('small',{}, [TYPE_LABEL[r.type], r.memo, (r.startDate||r.start)+'부터'+(r.end?' '+(r.endDate||r.end)+'까지':'')].filter(Boolean).join(' · '))),
       el('span',{class:'ops'}, el('button',{'aria-label':'수정',onclick:()=>openRecForm(r)},'✎'))); }))
     : el('p',{class:'subtle',style:'margin:0'},'자동이체처럼 매달 같은 날 반복되는 내역을 등록하면, 그 달이 되면 자동으로 기록돼요.')));
   { const rs=Object.entries(S.rates); if (rs.length) wrap.append(el('div',{class:'card'}, el('h3',{},'기억된 환율', el('span',{},'마지막 입력값')), el('div',{class:'row'}, rs.map(([c,r])=>el('span',{class:'chip num'}, `1 ${c} = ${Number(r).toLocaleString('ko-KR')}원`))), el('p',{class:'subtle'},'외화로 입력할 때 마지막에 쓴 환율이 자동으로 채워지고, 고치면 그 값을 기억해요. 합계와 그래프는 모두 원화 기준이에요.'))); }
@@ -671,8 +671,11 @@ function openRecForm(rule){
   const isNew=!rule; const d = rule ? {...rule} : {id:uid(), type:'expense', cat:'', amount:0, day:1, memo:'', who:S.members[0], start: ym(today())};
   const amt=el('input',{id:'rc-amount',class:'amt num',inputmode:'numeric',placeholder:'0',value:d.amount?d.amount.toLocaleString('ko-KR'):''});
   amt.addEventListener('input',()=>{ const v=amt.value.replace(/[^\d]/g,''); amt.value=v?Number(v).toLocaleString('ko-KR'):''; });
-  const day=el('input',{id:'rc-day',type:'number',min:'1',max:'31',value:d.day});
-  const start=el('input',{id:'rc-start',type:'month',value:d.start}); const end=el('input',{id:'rc-end',type:'month',value:d.end||''});
+  const startDate=el('input',{id:'rc-start',type:'date',value: d.startDate || (d.start ? `${d.start}-${pad(d.day||1)}` : today())});
+  const endDate=el('input',{id:'rc-end',type:'date',value: d.endDate || (d.end ? `${d.end}-${pad(d.day||1)}` : '')});
+  const hint=el('p',{class:'subtle',style:'margin:-6px 0 12px'});
+  const updHint=()=>{ if(!startDate.value){hint.textContent='';return;} const sd=new Date(startDate.value+'T00:00:00'); let txt=`매월 ${sd.getDate()}일 · ${sd.getFullYear()}년 ${sd.getMonth()+1}월부터`; if (endDate.value){ const ed=new Date(endDate.value+'T00:00:00'); const n=(ed.getFullYear()-sd.getFullYear())*12+(ed.getMonth()-sd.getMonth())+1; txt+=` ${ed.getFullYear()}년 ${ed.getMonth()+1}월까지 (총 ${n}회)`; } else txt+=' 계속'; hint.textContent=txt; };
+  startDate.addEventListener('input',updHint); endDate.addEventListener('input',updHint); updHint();
   const memo=el('input',{id:'rc-memo',value:d.memo,placeholder:'메모 (선택)',maxlength:'60'});
   const catBox=el('div',{class:'chips'}); const whoBox=el('div',{class:'chips'});
   const drawCats=()=>{ const list=S.cats.filter(c=>c.type===d.type); if(!list.find(c=>c.id===d.cat)) d.cat=list[0]?list[0].id:''; catBox.replaceChildren(...list.map(c=>el('button',{class:'chip'+(c.id===d.cat?' on':''),onclick:()=>{d.cat=c.id; drawCats();}}, c.name))); };
@@ -681,14 +684,17 @@ function openRecForm(rule){
   const body=el('div',{}, typeSeg(d.type, t=>{ d.type=t; drawCats(); }),
     el('div',{class:'field'}, el('label',{for:'rc-amount'},'금액 (원)'), amt),
     el('div',{class:'field'}, el('label',{},'항목'), catBox),
-    el('div',{class:'row'}, el('div',{class:'field',style:'flex:1'}, el('label',{for:'rc-day'},'매월 며칠'), day), el('div',{class:'field',style:'flex:1'}, el('label',{for:'rc-start'},'시작 달'), start), el('div',{class:'field',style:'flex:1'}, el('label',{for:'rc-end'},'마지막 달 (선택)'), end)),
+    el('div',{class:'row'}, el('div',{class:'field',style:'flex:1;min-width:150px'}, el('label',{for:'rc-start'},'첫 납부일'), startDate), el('div',{class:'field',style:'flex:1;min-width:150px'}, el('label',{for:'rc-end'},'마지막 납부일 (선택)'), endDate)),
+    hint,
     el('div',{class:'field'}, el('label',{},'누가'), whoBox),
     el('div',{class:'field'}, el('label',{for:'rc-memo'},'메모'), memo),
-    el('p',{class:'subtle',style:'margin:-6px 0 12px'},'시작 달부터 이번 달까지의 내역은 바로 기록되고, 다음 달 것은 예정으로 미리 표시돼요. 반복을 지워도 이미 기록된 내역은 남아요.'),
+    el('p',{class:'subtle',style:'margin:-6px 0 12px'},'첫 납부일의 "일"이 매달 반복 날짜가 돼요. 지난 달 것은 바로 기록되고 다음 달 것은 예정으로 표시돼요. 반복을 지워도 이미 기록된 내역은 남아요.'),
     el('div',{class:'row',style:'justify-content:space-between;margin-top:6px'},
       isNew?el('span'):el('button',{class:'btn danger',onclick:()=>{ if(!confirm('이 반복을 중단할까요? 이미 기록된 내역은 남아요.')) return; S.recurring=S.recurring.filter(r=>r.id!==d.id); saveSettings(); closeSheet(); }},'반복 중단'),
-      el('div',{class:'row'}, el('button',{class:'btn',onclick:closeSheet},'취소'), el('button',{class:'btn pri',onclick:async()=>{ const v=Number(amt.value.replace(/[^\d]/g,'')); if(!v){amt.focus();return;} const dd=Math.min(31,Math.max(1,Number(day.value)||1)); if(!start.value){start.focus();return;}
-        const rule={id:d.id,type:d.type,cat:d.cat,amount:v,day:dd,memo:memo.value.trim(),who:d.who,start:start.value}; if (end.value) rule.end=end.value;
+      el('div',{class:'row'}, el('button',{class:'btn',onclick:closeSheet},'취소'), el('button',{class:'btn pri',onclick:async()=>{ const v=Number(amt.value.replace(/[^\d]/g,'')); if(!v){amt.focus();return;} if(!startDate.value){startDate.focus();return;}
+        if (endDate.value && endDate.value<startDate.value){ toast('마지막 납부일이 첫 납부일보다 빨라요.'); endDate.focus(); return; }
+        const dd=Number(startDate.value.slice(8,10));
+        const rule={id:d.id,type:d.type,cat:d.cat,amount:v,day:dd,memo:memo.value.trim(),who:d.who,start:ym(startDate.value),startDate:startDate.value}; if (endDate.value) { rule.end=ym(endDate.value); rule.endDate=endDate.value; }
         S.recurring = isNew ? [...S.recurring,rule] : S.recurring.map(r=>r.id===rule.id?rule:r); await saveSettings(); await applyRecurring(); closeSheet(); toast(isNew?'반복을 등록했어요':'수정했어요'); }}, isNew?'등록':'저장'))));
   openSheet(isNew?'매달 반복 추가':'매달 반복 수정', body); setTimeout(()=>amt.focus(),50);
 }
